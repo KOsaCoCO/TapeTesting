@@ -2,6 +2,7 @@
 This is a locally made website with the help of AI and simple maths. To simulate real-world situations, environment behaviour, tape stickiness, tape strength, after-peel damage of new/existing tape variants. This is specifically made as a testing playground for my first Product UX RDI (research/design/innovation) case. 
 
 For More visit the Linkedin page where I post the structured presentation on my research (comming soon on 17-11-25):
+(if the image is too large/inaccessible, try tapping it for it to show up in full screen/window)
 
 ![linkedin_qr](https://github.com/user-attachments/assets/b9591661-5b8c-45df-b2ad-c2fac16459e6)
 <svg xmlns="http://www.w3.org/2000/svg" width="690" height="690" viewBox="0 0 690 690" shape-rendering="crispEdges">
