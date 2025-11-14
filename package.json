@@ -98,7 +98,14 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "chatParticipants": [
+  {
+    "id": "claude-code",
+    "name": "Claude Code",
+    "type": "ai"
+  }
+]
 }
 
 
