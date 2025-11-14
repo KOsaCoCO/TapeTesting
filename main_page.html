@@ -3,150 +3,778 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<meta name="description" content="Responsive 5-column demo page for desktop displays" />
-	<title>TapeTesting — 5 Column Demo</title>
+	<meta name="description" content="Tape Testing UI - Responsive demo with sidebar, playground, and controls" />
+	<title>TapeTesting</title>
 	<!-- Link CSS files for responsive layouts -->
 	<link rel="stylesheet" href="./display and css/desktop.css" />
 	<link rel="stylesheet" href="./display and css/tablet.css" />
 	<link rel="stylesheet" href="./display and css/phone.css" />
 	<style>
-		:root { --gap: 16px; --item-bg: #f3f4f6; --accent: #0ea5a4; }
-		:root { --sidebar-width: 20vw; --bottom-height: 20vh; --sidebar-height: auto; }
-		html,body{height:100%;margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
-		body{display:flex;flex-direction:column;gap:24px;padding:24px;background:#fff}
-		header{display:flex;align-items:center;gap:12px}
-		h1{font-size:1.25rem;margin:0}
+		:root {
+			--gap: 16px;
+			--item-bg: #f3f4f6;
+			--accent: #0ea5a4;
+			--sidebar-width: 20vw;
+			--bottom-height: 20vh;
+			--sidebar-height: auto;
+			--primary-color: #2563eb;
+			--secondary-color: #fef3c7;
+		}
 
-		/* Layout for Sidebar / Playground / Bottom bar */
-		.app-layout { position:relative; min-height:60vh; }
+		html, body {
+			height: 100%;
+			margin: 0;
+			font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+			background: #fff;
+		}
 
-		/* Defaults: sidebar on the left, bottombar at bottom, playground uses leftover space */
+		body {
+			display: flex;
+			flex-direction: column;
+		}
+
+		/* Main app layout */
+		.app-container {
+			display: flex;
+			flex: 1;
+			position: relative;
+			min-height: 100vh;
+		}
+
+		/* Sidebar */
 		.sidebar {
-			position:fixed;
-			left:0;
-			top:0;
-			bottom:0; /* allow sidebar to extend under bottom bar so they intersect */
+			position: fixed;
+			left: 0;
+			top: 0;
+			bottom: 0;
 			width: var(--sidebar-width);
-			background: #eef2ff;
+			background: #fff;
+			border-right: 4px solid var(--primary-color);
 			padding: 16px;
-			box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+			box-sizing: border-box;
 			z-index: 3;
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
 		}
 
-		.bottombar {
-			position:fixed;
-			left:0;
-			right:0;
-			bottom:0;
-			height: var(--bottom-height);
-			background: #fff7ed;
-			padding: 0;
-			box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
-			z-index: 2; /* below sidebar so sidebar visually overlaps */
+		.sidebar-btn {
+			width: 100%;
+			border: 2px solid var(--primary-color);
+			border-radius: 4px;
+			padding: 12px 16px;
+			background: #fff;
+			cursor: pointer;
+			font-size: 0.95rem;
+			transition: all 0.2s ease;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			text-align: left;
 		}
 
+		.sidebar-btn:hover {
+			background: #eff6ff;
+		}
+
+		.sidebar-btn.active {
+			background: #eff6ff;
+			border-color: #1e40af;
+		}
+
+		.sidebar-btn svg {
+			width: 18px;
+			height: 18px;
+			stroke: currentColor;
+		}
+
+		.sidebar-divider {
+			border-top: 1px solid #93c5fd;
+			margin: 8px 0;
+		}
+
+		/* Playground / Main content area */
 		.playground {
 			margin-left: var(--sidebar-width);
 			margin-bottom: var(--bottom-height);
 			padding: 20px;
-			min-height: calc(100vh - var(--bottom-height));
-			background: #ffffff;
-			overflow:auto;
+			box-sizing: border-box;
+			overflow-y: auto;
+			background: #fff;
+			flex: 1;
 		}
 
-		/* Reuse content-inner styles for consistent spacing */
-		.content-inner { max-width: 900px; }
+		.content-panel {
+			border: 4px solid var(--primary-color);
+			border-radius: 4px;
+			background: #f9fafb;
+			padding: 24px;
+			overflow-y: auto;
+			max-height: 100%;
+		}
 
-		/* Button container for bottombar - two equal-width buttons */
-		.button-container {
+		.content-panel h2 {
+			font-size: 1.5rem;
+			font-weight: 600;
+			margin: 0 0 16px 0;
+		}
+
+		.form-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 16px;
+			max-width: 400px;
+		}
+
+		.form-group {
 			display: flex;
-			gap: 0;
-			width: 100%;
-			height: 100%;
-			padding: 0;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.form-group label {
+			font-size: 0.9rem;
+			font-weight: 500;
+		}
+
+		.form-group input,
+		.form-group select {
+			padding: 8px 12px;
+			border: 1px solid #e5e7eb;
+			border-radius: 4px;
+			font-size: 0.95rem;
 			box-sizing: border-box;
 		}
 
-		/* Square buttons - half width each, full height of bottombar */
-		.square-btn {
-			flex: 1;
-			height: var(--bottom-height);
+		.form-group input:focus,
+		.form-group select:focus {
+			outline: none;
+			border-color: var(--primary-color);
+			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+		}
+
+		.preview-box {
+			margin: 24px 0;
+			padding: 16px;
+			border: 1px solid #e5e7eb;
+			border-radius: 4px;
+			background: #fff;
+			min-height: 200px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.preview-content {
+			text-align: center;
+			border: 2px dashed #d1d5db;
+			padding: 40px;
+			border-radius: 4px;
+			width: 100%;
+		}
+
+		.preview-content .title {
+			font-size: 1.1rem;
+			font-weight: 500;
+		}
+
+		.preview-content .subtitle {
+			font-size: 0.9rem;
+			color: #6b7280;
+			margin-top: 8px;
+		}
+
+		.history-list {
+			list-style: none;
 			padding: 0;
-			border: none;
-			background: #0ea5a4;
-			color: #fff;
-			font-size: 1rem;
+			margin: 0;
+			max-height: 280px;
+			overflow-y: auto;
+		}
+
+		.history-list li {
+			padding: 8px;
+			font-size: 0.85rem;
+			border-bottom: 1px solid #e5e7eb;
+		}
+
+		.history-list li:last-child {
+			border-bottom: none;
+		}
+
+		.guidelines-box {
+			margin-top: 24px;
+			padding: 16px;
+			border: 1px solid #fbbf24;
+			background: #fef3c7;
+			border-radius: 4px;
+		}
+
+		.guidelines-box h3 {
+			margin: 0 0 12px 0;
 			font-weight: 600;
-			border-radius: 8px;
+		}
+
+		.guidelines-box ol {
+			margin: 0;
+			padding-left: 20px;
+			font-size: 0.9rem;
+		}
+
+		/* Bottom bar */
+		.bottombar {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: var(--bottom-height);
+			background: #fff;
+			border-top: 4px solid var(--primary-color);
+			padding: 0;
+			box-sizing: border-box;
+			z-index: 2;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			overflow: hidden;
+		}
+
+		.bottom-content {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			width: 100%;
+			height: 100%;
+			padding: 12px 20px;
+			box-sizing: border-box;
+			gap: 16px;
+		}
+
+		.material-selector {
+			position: relative;
+			display: inline-block;
+		}
+
+		.material-btn {
+			border: 2px solid var(--primary-color);
+			background: #fff;
+			border-radius: 4px;
+			padding: 8px 12px;
 			cursor: pointer;
-			transition: background 0.2s ease;
+			font-size: 0.9rem;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			transition: all 0.2s ease;
 		}
 
-		.square-btn:hover {
-			background: #0d8f8c;
+		.material-btn:hover {
+			background: #eff6ff;
 		}
 
-		.square-btn:active {
-			background: #0a6b67;
+		.material-badge {
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: #fbcfe8;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 600;
+			font-size: 0.75rem;
 		}
 
-		/* On small screens (phone), stack: sidebar becomes a top bar, bottombar remains bottom, playground between */
+		.material-dropdown {
+			position: absolute;
+			bottom: 100%;
+			left: 0;
+			width: 160px;
+			background: #fff;
+			border: 2px solid #93c5fd;
+			border-radius: 4px;
+			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+			padding: 12px;
+			z-index: 10;
+			display: none;
+		}
+
+		.material-dropdown.open {
+			display: block;
+		}
+
+		.material-dropdown .title {
+			font-weight: 600;
+			margin-bottom: 8px;
+			font-size: 0.9rem;
+		}
+
+		.material-option {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid #e5e7eb;
+			border-radius: 4px;
+			background: #fff;
+			cursor: pointer;
+			font-size: 0.85rem;
+			margin-bottom: 4px;
+			text-align: left;
+			transition: all 0.2s ease;
+		}
+
+		.material-option:last-child {
+			margin-bottom: 0;
+		}
+
+		.material-option:hover {
+			background: #eff6ff;
+		}
+
+		.material-option.selected {
+			background: #eff6ff;
+			border-color: var(--primary-color);
+		}
+
+		.bottom-right {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-left: auto;
+		}
+
+		.bottom-right .status {
+			font-size: 0.85rem;
+			color: #4b5563;
+		}
+
+		.apply-btn {
+			padding: 8px 16px;
+			border: 1px solid var(--primary-color);
+			background: #fff;
+			color: var(--primary-color);
+			border-radius: 4px;
+			cursor: pointer;
+			font-weight: 500;
+			transition: all 0.2s ease;
+		}
+
+		.apply-btn:hover {
+			background: #eff6ff;
+		}
+
+		.save-notice {
+			position: fixed;
+			bottom: 30px;
+			right: 20px;
+			background: #dcfce7;
+			border: 1px solid #86efac;
+			padding: 12px 16px;
+			border-radius: 4px;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+			z-index: 50;
+			display: none;
+		}
+
+		.save-notice.show {
+			display: block;
+		}
+
+		/* Phone/responsive */
 		@media (max-width: 480px) {
-			:root { --sidebar-width: 100vw; --bottom-height: 20vh; --sidebar-height: 20vh; }
-			.sidebar { position:fixed; left:0; right:0; top:0; height: var(--sidebar-height); width:100%; bottom: auto; z-index:3 }
-			.playground { margin-left:0; margin-top: var(--sidebar-height); margin-bottom: var(--bottom-height); min-height: calc(100vh - var(--sidebar-height) - var(--bottom-height)); }
-			.bottombar { left:0; right:0; bottom:0; height: var(--bottom-height); }
+			:root {
+				--sidebar-width: 100vw;
+				--bottom-height: 20vh;
+				--sidebar-height: 20vh;
+			}
+
+			.sidebar {
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				height: var(--sidebar-height);
+				width: 100%;
+				bottom: auto;
+				border-right: none;
+				border-bottom: 4px solid var(--primary-color);
+				z-index: 3;
+				flex-direction: row;
+				overflow-x: auto;
+				padding: 8px;
+			}
+
+			.sidebar-btn {
+				flex-shrink: 0;
+				min-width: 100px;
+				padding: 8px 12px;
+				font-size: 0.85rem;
+			}
+
+			.sidebar-divider {
+				display: none;
+			}
+
+			.playground {
+				margin-left: 0;
+				margin-top: var(--sidebar-height);
+				margin-bottom: var(--bottom-height);
+				min-height: calc(100vh - var(--sidebar-height) - var(--bottom-height));
+			}
+
+			.bottombar {
+				left: 0;
+				right: 0;
+				bottom: 0;
+			}
+
+			.bottom-content {
+				flex-wrap: wrap;
+				justify-content: center;
+				padding: 8px 12px;
+			}
+
+			.bottom-right {
+				width: 100%;
+				justify-content: center;
+				margin-left: 0;
+				margin-top: 8px;
+			}
+
+			.form-grid {
+				grid-template-columns: 1fr;
+			}
 		}
-
-		/* Make container visually centered with max width typical for desktop apps */
-		.container { max-width:1280px; margin:0 auto; width:100% }
-
-		/* small utility for demo items */
-		.item-number { font-weight:700; color:var(--accent); font-size:1.1rem }
-
-		/* Responsive fallback: on very small screens, let grid be single column */
-		@media (max-width:420px){ .five-column { grid-template-columns: 1fr !important; } }
 	</style>
 </head>
 <body>
-	<header class="container">
-		<h1>Responsive 5-Column Demo</h1>
-	</header>
+	<div class="app-container">
+		<!-- Sidebar -->
+		<aside class="sidebar" aria-label="Sidebar">
+			<button class="sidebar-btn active" data-panel="dimensions">
+				<span>Dimensions</span>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+			</button>
+			<button class="sidebar-btn" data-panel="specifics">
+				<span>Specifics</span>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+			</button>
+			<button class="sidebar-btn" data-panel="environment">
+				<span>Environment</span>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+			</button>
 
-	<main class="container">
-		<!-- Three-section layout: Sidebar (left 20%), Playground (center), Bottom bar (bottom 20%).
-				 Sidebar and Bottom bar are positioned so they visually intersect at the bottom-left corner. -->
-		<div class="app-layout">
-			<aside class="sidebar" aria-label="Sidebar">
-				<div class="content-inner">
-					<h2>Sidebar</h2>
-					<p>Navigation or controls</p>
+			<div class="sidebar-divider"></div>
+
+			<button class="sidebar-btn" data-panel="save">
+				Save Parameters
+			</button>
+
+			<button class="sidebar-btn" data-panel="history">
+				History Log
+			</button>
+
+			<button class="sidebar-btn" data-panel="guidelines">
+				Guidelines
+			</button>
+
+			<div class="sidebar-divider"></div>
+
+			<button class="sidebar-btn" id="resetBtn">
+				RESET
+			</button>
+		</aside>
+
+		<!-- Main Playground -->
+		<section class="playground" aria-label="Playground">
+			<div class="content-panel" id="contentPanel">
+				<!-- Content inserted here by JS -->
+			</div>
+		</section>
+
+		<!-- Bottom Bar -->
+		<div class="bottombar" aria-label="Bottom bar">
+			<div class="bottom-content">
+				<div class="material-selector">
+					<button class="material-btn" id="tapeMaterialBtn">
+						<span class="material-badge">T</span>
+						<span>Tape Material</span>
+					</button>
+					<div class="material-dropdown" id="tapeMaterialDropdown">
+						<div class="title">Tape Material</div>
+						<!-- Options added by JS -->
+					</div>
 				</div>
-			</aside>
 
-			<section class="playground" aria-label="Playground">
-				<div class="pg-inner">
-					<h2>Playground</h2>
-					<p>This area fills the remaining space not occupied by the sidebar and bottom bar. Resize the window to see responsive behavior across desktop, tablet and phone.</p>
+				<div class="material-selector">
+					<button class="material-btn" id="surfaceMaterialBtn">
+						<span class="material-badge">S</span>
+						<span>Surface Material</span>
+					</button>
+					<div class="material-dropdown" id="surfaceMaterialDropdown">
+						<div class="title">Surface Material</div>
+						<!-- Options added by JS -->
+					</div>
 				</div>
-			</section>
 
-			<div class="bottombar" aria-label="Bottom bar">
-				<div class="button-container">
-					<button class="square-btn">Button 1</button>
-					<button class="square-btn">Button 2</button>
+				<div class="bottom-right">
+					<div class="status" id="statusText">Current: PVC on Steel</div>
+					<button class="apply-btn" id="applyBtn">Apply</button>
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 
-	<footer class="container" style="font-size:0.9rem;color:#556">
-		<p>Files linked: <code>desktop_size.js</code>, <code>tablet_size.js</code>, <code>phone_size.js</code></p>
-	</footer>
+	<!-- Save notice -->
+	<div class="save-notice" id="saveNotice">Saved</div>
 
-	<!-- Load scripts as modules so they can export/init as needed -->
+	<!-- Scripts -->
 	<script type="module" src="./display and css/desktop_size.js"></script>
 	<script type="module" src="./display and css/tablet_size.js"></script>
 	<script type="module" src="./display and css/phone_size.js"></script>
+
+	<script>
+		// UI State
+		const state = {
+			activePanel: 'dimensions',
+			params: { width: 100, height: 80, tape: 'PVC', surface: 'Steel' },
+			history: [],
+			showGuidelines: false,
+			materialPanel: { tape: false, surface: false }
+		};
+
+		const tapeOptions = ['PVC', 'Polypropylene', 'Cloth', 'Foam'];
+		const surfaceOptions = ['Steel', 'Aluminum', 'Glass', 'Plastic'];
+
+		// Load from localStorage
+		function loadState() {
+			const saved = localStorage.getItem('tape_ui_params');
+			if (saved) state.params = JSON.parse(saved);
+			const savedHistory = localStorage.getItem('tape_ui_history');
+			if (savedHistory) state.history = JSON.parse(savedHistory);
+		}
+
+		// Save to localStorage
+		function saveState() {
+			localStorage.setItem('tape_ui_params', JSON.stringify(state.params));
+			localStorage.setItem('tape_ui_history', JSON.stringify(state.history));
+		}
+
+		// Add history entry
+		function addHistory(entry) {
+			const time = new Date().toLocaleString();
+			state.history.unshift({ time, text: entry });
+			state.history = state.history.slice(0, 50);
+			saveState();
+		}
+
+		// Render content based on active panel
+		function renderContent() {
+			const panel = document.getElementById('contentPanel');
+			const { width, height } = state.params;
+
+			switch (state.activePanel) {
+				case 'dimensions':
+					panel.innerHTML = `
+						<h2>Dimensions</h2>
+						<div class="form-grid">
+							<div class="form-group">
+								<label>Width (mm)</label>
+								<input type="number" id="widthInput" value="${width}" />
+							</div>
+							<div class="form-group">
+								<label>Height (mm)</label>
+								<input type="number" id="heightInput" value="${height}" />
+							</div>
+						</div>
+						<div class="preview-box">
+							<div class="preview-content">
+								<div class="title">Preview Box</div>
+								<div class="subtitle">${width} × ${height} mm</div>
+							</div>
+						</div>
+					`;
+					document.getElementById('widthInput').addEventListener('change', (e) => {
+						state.params.width = Number(e.target.value);
+						addHistory(`Width set to ${e.target.value}`);
+						renderContent();
+					});
+					document.getElementById('heightInput').addEventListener('change', (e) => {
+						state.params.height = Number(e.target.value);
+						addHistory(`Height set to ${e.target.value}`);
+						renderContent();
+					});
+					break;
+
+				case 'specifics':
+					panel.innerHTML = `
+						<h2>Specifics</h2>
+						<p>Specific parameters: thickness, adhesive type, colour, tolerances, notes.</p>
+						<div class="form-grid">
+							<div class="form-group">
+								<label>Thickness (µm)</label>
+								<input type="number" value="120" />
+							</div>
+							<div class="form-group">
+								<label>Adhesive</label>
+								<select>
+									<option>Acrylic</option>
+									<option>Rubber</option>
+									<option>Silicone</option>
+								</select>
+							</div>
+						</div>
+					`;
+					break;
+
+				case 'environment':
+					panel.innerHTML = `
+						<h2>Environment</h2>
+						<p>Choose environmental conditions used for the calculation / preview.</p>
+						<div class="form-grid">
+							<div class="form-group">
+								<label>Temperature (°C)</label>
+								<input type="number" value="23" />
+							</div>
+							<div class="form-group">
+								<label>Humidity (%)</label>
+								<input type="number" value="50" />
+							</div>
+						</div>
+					`;
+					break;
+
+				case 'history':
+					panel.innerHTML = `
+						<h2>History Log</h2>
+						${state.history.length === 0 ? '<div style="color: #6b7280;">No history yet.</div>' : `
+							<ul class="history-list">
+								${state.history.map(h => `<li><strong>${h.time}</strong> — ${h.text}</li>`).join('')}
+							</ul>
+						`}
+					`;
+					break;
+			}
+
+			// Add guidelines if active
+			if (state.showGuidelines && state.activePanel !== 'history') {
+				panel.innerHTML += `
+					<div class="guidelines-box">
+						<h3>Guidelines</h3>
+						<ol>
+							<li>Keep safety margins in the design.</li>
+							<li>Validate adhesion on a sample first.</li>
+							<li>Record environment conditions with the build.</li>
+						</ol>
+					</div>
+				`;
+			}
+		}
+
+		// Sidebar button handlers
+		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const panel = btn.getAttribute('data-panel');
+
+				if (panel === 'save') {
+					const blob = new Blob([JSON.stringify(state.params, null, 2)], { type: 'application/json' });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = 'parameters.json';
+					a.click();
+					URL.revokeObjectURL(url);
+					document.getElementById('saveNotice').classList.add('show');
+					setTimeout(() => document.getElementById('saveNotice').classList.remove('show'), 2000);
+					addHistory('Parameters saved to JSON');
+					return;
+				}
+
+				if (panel === 'guidelines') {
+					state.showGuidelines = !state.showGuidelines;
+					renderContent();
+					return;
+				}
+
+				state.activePanel = panel;
+				state.showGuidelines = false;
+
+				document.querySelectorAll('.sidebar-btn[data-panel]').forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+
+				renderContent();
+				addHistory(`Opened ${panel.charAt(0).toUpperCase() + panel.slice(1)}`);
+			});
+		});
+
+		// Reset button
+		document.getElementById('resetBtn').addEventListener('click', () => {
+			state.params = { width: 100, height: 80, tape: 'PVC', surface: 'Steel' };
+			state.history = [];
+			state.activePanel = 'dimensions';
+			state.showGuidelines = false;
+			state.materialPanel = { tape: false, surface: false };
+			localStorage.clear();
+			location.reload();
+		});
+
+		// Material selector buttons
+		function setupMaterialSelector(btnId, dropdownId, optionsArray, key) {
+			const btn = document.getElementById(btnId);
+			const dropdown = document.getElementById(dropdownId);
+			const titleDiv = dropdown.querySelector('.title');
+
+			// Populate options
+			optionsArray.forEach(opt => {
+				const optBtn = document.createElement('button');
+				optBtn.className = 'material-option';
+				optBtn.textContent = opt;
+				if (opt === state.params[key]) optBtn.classList.add('selected');
+				optBtn.addEventListener('click', () => {
+					state.params[key] = opt;
+					document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
+					addHistory(`${key === 'tape' ? 'Tape' : 'Surface'} selected: ${opt}`);
+					dropdown.classList.remove('open');
+					renderContent();
+				});
+				dropdown.appendChild(optBtn);
+			});
+
+			// Toggle dropdown
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				dropdown.classList.toggle('open');
+			});
+
+			// Close on outside click
+			document.addEventListener('click', (e) => {
+				if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+					dropdown.classList.remove('open');
+				}
+			});
+		}
+
+		setupMaterialSelector('tapeMaterialBtn', 'tapeMaterialDropdown', tapeOptions, 'tape');
+		setupMaterialSelector('surfaceMaterialBtn', 'surfaceMaterialDropdown', surfaceOptions, 'surface');
+
+		// Apply button
+		document.getElementById('applyBtn').addEventListener('click', () => {
+			addHistory(`Applied ${state.params.tape} to ${state.params.surface}`);
+		});
+
+		// Initialize
+		loadState();
+		renderContent();
+		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
+			if (btn.getAttribute('data-panel') === state.activePanel) {
+				btn.classList.add('active');
+			}
+		});
+	</script>
 </body>
 </html>
