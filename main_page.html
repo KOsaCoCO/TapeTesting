@@ -15,7 +15,7 @@
 			--item-bg: #f3f4f6;
 			--accent: #0ea5a4;
 			--sidebar-width: 20vw;
-			--bottom-height: 20vh;
+			--bottom-height: calc(20vh - 15px);
 			--sidebar-height: auto;
 			--primary-color: #2563eb;
 			--secondary-color: #fef3c7;
@@ -52,14 +52,22 @@
 			border-right: 4px solid var(--primary-color);
 			padding: 16px;
 			box-sizing: border-box;
-			z-index: 3;
+			z-index: 2;
 			overflow-y: auto;
 			display: flex;
 			flex-direction: column;
 			gap: 16px;
+			transition: transform 0.3s ease, opacity 0.3s ease;
+		}
+
+		.sidebar.hidden {
+			transform: translateX(-100%);
+			opacity: 0;
+			pointer-events: none;
 		}
 
 		.sidebar-btn {
+			position: relative;
 			width: 100%;
 			border: 2px solid var(--primary-color);
 			border-radius: 4px;
@@ -72,6 +80,38 @@
 			align-items: center;
 			justify-content: space-between;
 			text-align: left;
+		}
+
+		/* Tooltip for sidebar buttons (small helper text on hover) */
+		/* Hide the earlier pseudo-element tooltips; we'll use a floating tooltip appended to <body> */
+		.sidebar-btn[data-tip]::after,
+		.sidebar-btn[data-tip]::before,
+		.preview-btn[data-tip]::after,
+		.preview-btn[data-tip]::before {
+			display: none !important;
+		}
+
+		/* Floating tooltip that sits on top of everything */
+		.floating-tip {
+			position: fixed;
+			display: none;
+			background: rgba(17, 24, 39, 0.95);
+			color: #fff;
+			padding: 6px 10px;
+			border-radius: 6px;
+			font-size: 0.78rem;
+			white-space: nowrap;
+			z-index: 99999;
+			pointer-events: none; /* disabled until visible so it won't block interactions */
+			box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+			transition: opacity 0.12s ease;
+			opacity: 0;
+		}
+
+		.floating-tip.show {
+			display: block;
+			opacity: 1;
+			pointer-events: auto; /* allow mouse to enter the tip itself so it can cancel hide */
 		}
 
 		.sidebar-btn:hover {
@@ -94,15 +134,47 @@
 			margin: 8px 0;
 		}
 
+		/* Preview button - full width, distinct styling */
+		.preview-btn {
+			position: relative;
+			width: 100%;
+			border: 2px solid var(--primary-color);
+			background: var(--primary-color);
+			color: #fff;
+			border-radius: 4px;
+			padding: 12px 16px;
+			cursor: pointer;
+			font-size: 0.95rem;
+			font-weight: 600;
+			transition: all 0.2s ease;
+		}
+
+		.preview-btn:hover {
+			background: #1e40af;
+			border-color: #1e40af;
+		}
+
+		.preview-btn.active {
+			background: #fff;
+			color: var(--primary-color);
+			border-color: var(--primary-color);
+		}
+
 		/* Playground / Main content area */
 		.playground {
 			margin-left: var(--sidebar-width);
-			margin-bottom: var(--bottom-height);
+			margin-bottom: calc(var(--bottom-height) + 50px);
 			padding: 20px;
 			box-sizing: border-box;
 			overflow-y: auto;
 			background: #fff;
 			flex: 1;
+			transition: margin-left 0.3s ease, margin-bottom 0.3s ease;
+		}
+
+		.playground.preview-mode {
+			margin-left: 0;
+			margin-bottom: 0;
 		}
 
 		.content-panel {
@@ -112,6 +184,7 @@
 			padding: 24px;
 			overflow-y: auto;
 			max-height: 100%;
+			padding-bottom: 40px;
 		}
 
 		.content-panel h2 {
@@ -222,6 +295,134 @@
 			font-size: 0.9rem;
 		}
 
+		/* Middle section - above bottom bar */
+		.middlebar {
+			position: fixed;
+			left: var(--sidebar-width);
+			right: 0;
+			bottom: var(--bottom-height);
+			height: 50px;
+			background: #fff;
+			border-top: 4px solid var(--primary-color);
+			padding: 0 95px;
+			box-sizing: border-box;
+			z-index: 2;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			overflow: hidden;
+			transition: transform 0.3s ease, opacity 0.3s ease;
+		}
+
+		.middlebar-line {
+			width: 100%;
+			height: 4px;
+			background: #e5e7eb;
+			border-radius: 2px;
+			position: relative;
+			margin: 20px 0;
+			cursor: pointer;
+		}
+
+		.slider-progress {
+			position: absolute;
+			left: 0;
+			top: 0;
+			height: 100%;
+			background: var(--primary-color);
+			border-radius: 2px;
+			width: 0%;
+			pointer-events: none;
+			transition: width 0.05s ease;
+		}
+
+		.slider-handle {
+			position: absolute;
+			top: 50%;
+			left: 0%;
+			transform: translate(-50%, -50%);
+			width: 16px;
+			height: 16px;
+			background: var(--primary-color);
+			border: 2px solid #fff;
+			border-radius: 50%;
+			cursor: grab;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+			transition: transform 0.05s ease, box-shadow 0.2s ease;
+			z-index: 2;
+		}
+
+		.slider-handle:hover {
+			box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+			transform: translate(-50%, -50%) scale(1.15);
+		}
+
+		.slider-handle:active,
+		.slider-handle.dragging {
+			cursor: grabbing;
+			box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+			transform: translate(-50%, -50%) scale(1.2);
+		}
+
+		.middlebar-labels {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 0;
+			padding: 0 95px;
+			box-sizing: border-box;
+			pointer-events: none;
+		}
+
+		/* Left and right gap containers for labels (centered in the padding gaps)
+		   The .middlebar-line defines the visible slider line; these containers
+		   occupy the left/right padding area and center their content. */
+		.middlebar-gap {
+			width: 95px; /* matches middlebar padding */
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			pointer-events: none;
+		}
+
+		/* Left gap: keep label near the sidebar edge */
+		.middlebar-gap:first-child {
+			justify-content: flex-start;
+		}
+
+		.middlebar-gap:first-child span {
+			margin-left: -40px; /* move 40px closer to sidebar edge */
+		}
+
+		/* Right gap: align label toward the display edge and nudge outward */
+		.middlebar-gap:last-child {
+			justify-content: flex-end;
+		}
+
+		.middlebar-gap:last-child span {
+			margin-right: -40px; /* move 40px closer to display edge - mirrors left */
+		}
+
+		.middlebar-gap span {
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: var(--primary-color);
+			display: inline-block;
+			transform: translateY(-2px); /* small vertical nudge so it visually clears the line */
+		}
+
+		.middlebar.hidden {
+			transform: translateY(100%);
+			opacity: 0;
+			pointer-events: none;
+		}
+
 		/* Bottom bar */
 		.bottombar {
 			position: fixed;
@@ -233,11 +434,18 @@
 			border-top: 4px solid var(--primary-color);
 			padding: 0;
 			box-sizing: border-box;
-			z-index: 2;
+			z-index: 3;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
 			overflow: hidden;
+			transition: transform 0.3s ease, opacity 0.3s ease;
+		}
+
+		.bottombar.hidden {
+			transform: translateY(100%);
+			opacity: 0;
+			pointer-events: none;
 		}
 
 		.bottom-content {
@@ -246,27 +454,32 @@
 			justify-content: space-between;
 			width: 100%;
 			height: 100%;
-			padding: 12px 20px;
+			padding: 40px 20px;
 			box-sizing: border-box;
-			gap: 16px;
+			gap: 20px;
 		}
 
 		.material-selector {
 			position: relative;
-			display: inline-block;
+			display: flex;
+			flex: 1;
+			min-width: 0;
 		}
 
 		.material-btn {
 			border: 2px solid var(--primary-color);
 			background: #fff;
 			border-radius: 4px;
-			padding: 8px 12px;
+			padding: 8px 17px;
 			cursor: pointer;
 			font-size: 0.9rem;
 			display: flex;
 			align-items: center;
+			justify-content: center;
 			gap: 8px;
 			transition: all 0.2s ease;
+			flex: 1;
+			min-width: 0;
 		}
 
 		.material-btn:hover {
@@ -286,17 +499,16 @@
 		}
 
 		.material-dropdown {
-			position: absolute;
-			bottom: 100%;
-			left: 0;
+			position: fixed;
 			width: 160px;
 			background: #fff;
 			border: 2px solid #93c5fd;
 			border-radius: 4px;
-			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 			padding: 12px;
-			z-index: 10;
+			z-index: 100000;
 			display: none;
+			pointer-events: auto;
 		}
 
 		.material-dropdown.open {
@@ -338,8 +550,10 @@
 		.bottom-right {
 			display: flex;
 			align-items: center;
+			justify-content: flex-end;
 			gap: 12px;
 			margin-left: auto;
+			flex-shrink: 0;
 		}
 
 		.bottom-right .status {
@@ -377,6 +591,29 @@
 
 		.save-notice.show {
 			display: block;
+		}
+
+		/* Preview mode hint */
+		.preview-hint {
+			position: fixed;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: rgba(0, 0, 0, 0.7);
+			color: #fff;
+			padding: 12px 20px;
+			border-radius: 24px;
+			font-size: 0.85rem;
+			text-align: center;
+			z-index: 40;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease;
+		}
+
+		.preview-hint.show {
+			opacity: 1;
+			pointer-events: auto;
 		}
 
 		/* Phone/responsive */
@@ -427,6 +664,12 @@
 				bottom: 0;
 			}
 
+			.middlebar {
+				left: 0;
+				right: 0;
+				bottom: var(--bottom-height);
+			}
+
 			.bottom-content {
 				flex-wrap: wrap;
 				justify-content: center;
@@ -450,42 +693,46 @@
 	<div class="app-container">
 		<!-- Sidebar -->
 		<aside class="sidebar" aria-label="Sidebar">
-			<button class="sidebar-btn active" data-panel="dimensions">
+			<button class="sidebar-btn active" data-panel="dimensions" data-tip="Set width & height">
 				<span>Dimensions</span>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
 			</button>
-			<button class="sidebar-btn" data-panel="specifics">
+			<button class="sidebar-btn" data-panel="specifics" data-tip="Thickness, adhesive, tolerances">
 				<span>Specifics</span>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
 			</button>
-			<button class="sidebar-btn" data-panel="environment">
+			<button class="sidebar-btn" data-panel="environment" data-tip="Temperature & humidity">
 				<span>Environment</span>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
 			</button>
 
+			<button class="preview-btn" id="previewBtn" title="Preview mode - hides sidebar and bottom bar" data-tip="Toggle full-screen preview">
+				Preview
+			</button>
+
 			<div class="sidebar-divider"></div>
 
-			<button class="sidebar-btn" data-panel="save">
+			<button class="sidebar-btn" data-panel="save" data-tip="Download current parameters as JSON">
 				Save Parameters
 			</button>
 
-			<button class="sidebar-btn" data-panel="history">
+			<button class="sidebar-btn" data-panel="history" data-tip="View recent changes">
 				History Log
 			</button>
 
-			<button class="sidebar-btn" data-panel="guidelines">
+			<button class="sidebar-btn" data-panel="guidelines" data-tip="Show design guidelines">
 				Guidelines
 			</button>
 
 			<div class="sidebar-divider"></div>
 
-			<button class="sidebar-btn" id="resetBtn">
+			<button class="sidebar-btn" id="resetBtn" data-tip="Reset all parameters">
 				RESET
 			</button>
 		</aside>
@@ -496,6 +743,18 @@
 				<!-- Content inserted here by JS -->
 			</div>
 		</section>
+
+		<!-- Middle Section - above bottom bar -->
+		<div class="middlebar" aria-label="Middle bar">
+			<div class="middlebar-line" id="sliderTrack" data-tip="Time Impact Slider">
+				<div class="slider-progress" id="sliderProgress"></div>
+				<div class="slider-handle" id="sliderHandle"></div>
+			</div>
+			<div class="middlebar-labels">
+				<div class="middlebar-gap"><span>0</span></div>
+				<div class="middlebar-gap"><span id="sliderValue">366</span></div>
+			</div>
+		</div>
 
 		<!-- Bottom Bar -->
 		<div class="bottombar" aria-label="Bottom bar">
@@ -534,6 +793,12 @@
 	<div class="save-notice" id="saveNotice">Saved</div>
 
 	<!-- Scripts -->
+	<!-- Preview mode hint -->
+	<div class="preview-hint" id="previewHint">Press ESC to exit preview mode</div>
+
+	<!-- Floating tooltip shown above all content -->
+	<div id="floatingTip" class="floating-tip" aria-hidden="true"></div>
+
 	<script type="module" src="./display and css/desktop_size.js"></script>
 	<script type="module" src="./display and css/tablet_size.js"></script>
 	<script type="module" src="./display and css/phone_size.js"></script>
@@ -542,10 +807,12 @@
 		// UI State
 		const state = {
 			activePanel: 'dimensions',
-			params: { width: 100, height: 80, tape: 'PVC', surface: 'Steel' },
+			params: { width: 100, height: 80, tape: 'PVC', surface: 'Steel', temperature: 23, humidity: 50, thickness: 120, adhesive: 'Acrylic' },
 			history: [],
+			experiments: [],
 			showGuidelines: false,
-			materialPanel: { tape: false, surface: false }
+			materialPanel: { tape: false, surface: false },
+			previewMode: false
 		};
 
 		const tapeOptions = ['PVC', 'Polypropylene', 'Cloth', 'Foam'];
@@ -557,12 +824,15 @@
 			if (saved) state.params = JSON.parse(saved);
 			const savedHistory = localStorage.getItem('tape_ui_history');
 			if (savedHistory) state.history = JSON.parse(savedHistory);
+			const savedExperiments = localStorage.getItem('tape_ui_experiments');
+			if (savedExperiments) state.experiments = JSON.parse(savedExperiments);
 		}
 
 		// Save to localStorage
 		function saveState() {
 			localStorage.setItem('tape_ui_params', JSON.stringify(state.params));
 			localStorage.setItem('tape_ui_history', JSON.stringify(state.history));
+			localStorage.setItem('tape_ui_experiments', JSON.stringify(state.experiments));
 		}
 
 		// Add history entry
@@ -576,6 +846,8 @@
 		// Render content based on active panel
 		function renderContent() {
 			const panel = document.getElementById('contentPanel');
+			// Clear panel first so closing a panel removes its content immediately
+			panel.innerHTML = '';
 			const { width, height } = state.params;
 
 			switch (state.activePanel) {
@@ -590,12 +862,6 @@
 							<div class="form-group">
 								<label>Height (mm)</label>
 								<input type="number" id="heightInput" value="${height}" />
-							</div>
-						</div>
-						<div class="preview-box">
-							<div class="preview-content">
-								<div class="title">Preview Box</div>
-								<div class="subtitle">${width} × ${height} mm</div>
 							</div>
 						</div>
 					`;
@@ -649,18 +915,30 @@
 					`;
 					break;
 
-				case 'history':
-					panel.innerHTML = `
-						<h2>History Log</h2>
-						${state.history.length === 0 ? '<div style="color: #6b7280;">No history yet.</div>' : `
-							<ul class="history-list">
-								${state.history.map(h => `<li><strong>${h.time}</strong> — ${h.text}</li>`).join('')}
-							</ul>
-						`}
-					`;
-					break;
-			}
 
+			case 'history':
+				panel.innerHTML = `
+					<h2>Saved Experiments</h2>
+					${state.experiments.length === 0 ? '<div style="color: #6b7280;">No experiments saved yet.</div>' : `
+						<div style="display: flex; flex-direction: column; gap: 12px;">
+							${state.experiments.map((exp, idx) => `
+								<div style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 12px; background: #f9fafb;">
+									<div style="font-weight: 600; margin-bottom: 8px;">${exp.name}</div>
+									<div style="font-size: 0.85rem; color: #4b5563; line-height: 1.5;">
+										<div><strong>Dimensions:</strong> ${exp.data.width} × ${exp.data.height} mm</div>
+										<div><strong>Tape Material:</strong> ${exp.data.tape}</div>
+										<div><strong>Surface Material:</strong> ${exp.data.surface}</div>
+										<div><strong>Environment:</strong> ${exp.data.temperature}°C, ${exp.data.humidity}% humidity</div>
+										<div><strong>Thickness:</strong> ${exp.data.thickness} µm</div>
+										<div><strong>Adhesive:</strong> ${exp.data.adhesive}</div>
+									</div>
+								</div>
+							`).join('')}
+						</div>
+					`}
+				`;
+				break;
+			}
 			// Add guidelines if active
 			if (state.showGuidelines && state.activePanel !== 'history') {
 				panel.innerHTML += `
@@ -676,46 +954,67 @@
 			}
 		}
 
-		// Sidebar button handlers
+		// Sidebar button handlers (click to open, click again to close)
 		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
-			btn.addEventListener('click', () => {
-				const panel = btn.getAttribute('data-panel');
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const panelName = btn.getAttribute('data-panel');
 
-				if (panel === 'save') {
-					const blob = new Blob([JSON.stringify(state.params, null, 2)], { type: 'application/json' });
-					const url = URL.createObjectURL(blob);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = 'parameters.json';
-					a.click();
-					URL.revokeObjectURL(url);
+				// Special case: save
+				if (panelName === 'save') {
+					const experimentNum = state.experiments.length + 1;
+					const timestamp = new Date().toLocaleString();
+					const experimentName = `Tape Experiment ${experimentNum} - ${timestamp}`;
+					const snapshot = {
+						id: experimentNum,
+						name: experimentName,
+						timestamp: timestamp,
+						data: { ...state.params }
+					};
+					state.experiments.push(snapshot);
+					addHistory(`Saved experiment: ${experimentName}`);
+					saveState();
 					document.getElementById('saveNotice').classList.add('show');
 					setTimeout(() => document.getElementById('saveNotice').classList.remove('show'), 2000);
-					addHistory('Parameters saved to JSON');
 					return;
 				}
 
-				if (panel === 'guidelines') {
-					state.showGuidelines = !state.showGuidelines;
+				// Toggle behavior: if clicking the already-open panel, close it
+				if (state.activePanel === panelName) {
+					state.activePanel = null;
+					state.showGuidelines = false;
+					document.querySelectorAll('.sidebar-btn[data-panel]').forEach(b => b.classList.remove('active'));
+					document.getElementById('contentPanel').innerHTML = '';
+					addHistory(`Closed ${panelName.charAt(0).toUpperCase() + panelName.slice(1)}`);
+					return;
+				}
+
+				// Guidelines toggles the guidelines overlay within the panel
+				if (panelName === 'guidelines') {
+					state.showGuidelines = true;
+					state.activePanel = 'guidelines';
+					document.querySelectorAll('.sidebar-btn[data-panel]').forEach(b => b.classList.remove('active'));
+					btn.classList.add('active');
 					renderContent();
+					addHistory('Opened Guidelines');
 					return;
 				}
 
-				state.activePanel = panel;
+				// Open a new panel
+				state.activePanel = panelName;
 				state.showGuidelines = false;
-
 				document.querySelectorAll('.sidebar-btn[data-panel]').forEach(b => b.classList.remove('active'));
 				btn.classList.add('active');
-
 				renderContent();
-				addHistory(`Opened ${panel.charAt(0).toUpperCase() + panel.slice(1)}`);
+				addHistory(`Opened ${panelName.charAt(0).toUpperCase() + panelName.slice(1)}`);
 			});
 		});
 
 		// Reset button
 		document.getElementById('resetBtn').addEventListener('click', () => {
-			state.params = { width: 100, height: 80, tape: 'PVC', surface: 'Steel' };
+			state.params = { width: 100, height: 80, tape: 'PVC', surface: 'Steel', temperature: 23, humidity: 50, thickness: 120, adhesive: 'Acrylic' };
 			state.history = [];
+			state.experiments = [];
 			state.activePanel = 'dimensions';
 			state.showGuidelines = false;
 			state.materialPanel = { tape: false, surface: false };
@@ -745,10 +1044,27 @@
 				dropdown.appendChild(optBtn);
 			});
 
-			// Toggle dropdown
+			// Position and toggle dropdown on click only
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
-				dropdown.classList.toggle('open');
+				const isOpen = dropdown.classList.contains('open');
+				
+				if (!isOpen) {
+					// Close all other dropdowns first
+					document.querySelectorAll('.material-dropdown.open').forEach(d => {
+						if (d !== dropdown) d.classList.remove('open');
+					});
+					
+					// Position dropdown as fixed popup above the button
+					const rect = btn.getBoundingClientRect();
+					dropdown.style.left = (rect.left + window.scrollX) + 'px';
+					dropdown.style.top = (rect.top + window.scrollY - 10) + 'px';
+					dropdown.style.transform = 'translateY(-100%)';
+					
+					dropdown.classList.add('open');
+				} else {
+					dropdown.classList.remove('open');
+				}
 			});
 
 			// Close on outside click
@@ -767,6 +1083,98 @@
 			addHistory(`Applied ${state.params.tape} to ${state.params.surface}`);
 		});
 
+		// Floating tooltip behavior: show a top-level tooltip so it won't be clipped by sidebar overflow
+        function setupFloatingTooltips() {
+            const tip = document.querySelector('.floating-tip');
+            const elementsWithTips = document.querySelectorAll('[data-tip]');
+            let showTimeout, hideTimeout;
+
+            elementsWithTips.forEach(elem => {
+                elem.addEventListener('mouseenter', (e) => {
+                    clearTimeout(hideTimeout);
+                    const tipText = elem.getAttribute('data-tip');
+                    showTimeout = setTimeout(() => {
+                        tip.textContent = tipText;
+                        tip.style.display = 'block';
+                        tip.classList.add('show');
+                        tip.setAttribute('aria-hidden', 'false');
+                        
+                        const rect = elem.getBoundingClientRect();
+                        let left = rect.left + rect.width / 2;
+                        let top = rect.top - 10;
+
+                        if (left + 75 > window.innerWidth) left = window.innerWidth - 80;
+                        if (left - 75 < 0) left = 80;
+                        if (top < 30) top = rect.bottom + 10;
+
+                        tip.style.left = left + 'px';
+                        tip.style.top = top + 'px';
+                    }, 50);
+                });
+
+                elem.addEventListener('mouseleave', () => {
+                    clearTimeout(showTimeout);
+                    hideTimeout = setTimeout(() => {
+                        tip.classList.remove('show');
+                        tip.setAttribute('aria-hidden', 'true');
+                        setTimeout(() => {
+                            tip.style.display = 'none';
+                        }, 120);
+                    }, 1000);
+                });
+            });
+        }		setupFloatingTooltips();
+
+		// Preview button - toggle preview mode
+		document.getElementById('previewBtn').addEventListener('click', () => {
+			state.previewMode = !state.previewMode;
+			const sidebar = document.querySelector('.sidebar');
+			const middlebar = document.querySelector('.middlebar');
+			const bottombar = document.querySelector('.bottombar');
+			const playground = document.querySelector('.playground');
+			const previewBtn = document.getElementById('previewBtn');
+
+			if (state.previewMode) {
+				sidebar.classList.add('hidden');
+				middlebar.classList.add('hidden');
+				bottombar.classList.add('hidden');
+				playground.classList.add('preview-mode');
+				previewBtn.classList.add('active');
+				addHistory('Entered Preview mode');
+			} else {
+				sidebar.classList.remove('hidden');
+				middlebar.classList.remove('hidden');
+				bottombar.classList.remove('hidden');
+				playground.classList.remove('preview-mode');
+				previewBtn.classList.remove('active');
+				addHistory('Exited Preview mode');
+			}
+			togglePreviewHint();
+		});
+		
+		// Show/hide preview hint
+		function togglePreviewHint() {
+			const hint = document.getElementById('previewHint');
+			if (state.previewMode) {
+				hint.classList.add('show');
+			} else {
+				hint.classList.remove('show');
+			}
+		}
+		
+		// Update preview button to show hint
+		const originalPreviewClick = document.getElementById('previewBtn').onclick;
+		document.getElementById('previewBtn').addEventListener('click', () => {
+			setTimeout(togglePreviewHint, 100);
+		});
+
+		// Allow ESC key to exit preview mode
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && state.previewMode) {
+				document.getElementById('previewBtn').click();
+			}
+		});
+
 		// Initialize
 		loadState();
 		renderContent();
@@ -775,6 +1183,85 @@
 				btn.classList.add('active');
 			}
 		});
+
+		// Time Impact Slider functionality
+		function initTimeSlider() {
+			const track = document.getElementById('sliderTrack');
+			const handle = document.getElementById('sliderHandle');
+			const progress = document.getElementById('sliderProgress');
+			const valueDisplay = document.getElementById('sliderValue');
+			
+			if (!track || !handle || !progress || !valueDisplay) return;
+
+			let sliderValue = 366; // default to max (366 days)
+			let isDragging = false;
+
+			function updateSlider(clientX) {
+				const rect = track.getBoundingClientRect();
+				let percentage = ((clientX - rect.left) / rect.width) * 100;
+				percentage = Math.max(0, Math.min(100, percentage));
+				
+				const value = Math.round((percentage / 100) * 366);
+				sliderValue = value;
+				
+				handle.style.left = percentage + '%';
+				progress.style.width = percentage + '%';
+				valueDisplay.textContent = value;
+			}
+
+			// Click on track to move handle
+			track.addEventListener('click', (e) => {
+				if (e.target === handle) return;
+				updateSlider(e.clientX);
+			});
+
+			// Drag handle
+			handle.addEventListener('mousedown', (e) => {
+				isDragging = true;
+				handle.classList.add('dragging');
+				e.preventDefault();
+			});
+
+			document.addEventListener('mousemove', (e) => {
+				if (!isDragging) return;
+				updateSlider(e.clientX);
+			});
+
+			document.addEventListener('mouseup', () => {
+				if (isDragging) {
+					isDragging = false;
+					handle.classList.remove('dragging');
+					addHistory(`Time impact set to ${sliderValue} days`);
+				}
+			});
+
+			// Touch support
+			handle.addEventListener('touchstart', (e) => {
+				isDragging = true;
+				handle.classList.add('dragging');
+				e.preventDefault();
+			});
+
+			document.addEventListener('touchmove', (e) => {
+				if (!isDragging) return;
+				const touch = e.touches[0];
+				updateSlider(touch.clientX);
+			});
+
+			document.addEventListener('touchend', () => {
+				if (isDragging) {
+					isDragging = false;
+					handle.classList.remove('dragging');
+					addHistory(`Time impact set to ${sliderValue} days`);
+				}
+			});
+
+			// Initialize at max value (366)
+			handle.style.left = '100%';
+			progress.style.width = '100%';
+		}
+
+		initTimeSlider();
 	</script>
 </body>
 </html>
