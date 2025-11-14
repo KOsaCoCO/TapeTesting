@@ -1,0 +1,30 @@
+/* Desktop 5-column responsive layout CSS */
+/* Pairs with desktop_size.js for dynamic column computation */
+
+.five-column {
+	width: 100%;
+	box-sizing: border-box;
+	display: grid;
+	gap: var(--gap, 16px);
+}
+
+.five-column > * {
+	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+}
+
+/* Use ::before to reserve vertical space according to aspect ratio */
+.five-column > *::before {
+	content: '';
+	display: block;
+	padding-top: calc(var(--five-aspect-ratio, 0.75) * 100%);
+}
+
+.five-column > * > .content {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

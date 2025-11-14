@@ -1,0 +1,23 @@
+/* Phone 1-column responsive layout CSS */
+/* Pairs with phone_size.js for touch-friendly sizing */
+
+.five-column > * {
+	padding: var(--phone-item-padding, 12px);
+}
+
+.five-column button,
+.five-column .btn {
+	height: var(--phone-button-height, 44px);
+	min-height: var(--phone-button-height, 44px);
+	font-size: var(--phone-min-font-size, 14px);
+	padding: 0 12px;
+}
+
+/* Phone-specific adjustments for 1-column layout */
+@media (max-width: 480px) {
+	.five-column {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: var(--gap, 12px);
+	}
+}

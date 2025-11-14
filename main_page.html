@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="Responsive 5-column demo page for desktop displays" />
+	<title>TapeTesting — 5 Column Demo</title>
+	<!-- Link CSS files for responsive layouts -->
+	<link rel="stylesheet" href="./display and css/desktop.css" />
+	<link rel="stylesheet" href="./display and css/tablet.css" />
+	<link rel="stylesheet" href="./display and css/phone.css" />
+	<style>
+		:root { --gap: 16px; --item-bg: #f3f4f6; --accent: #0ea5a4; }
+		:root { --sidebar-width: 20vw; --bottom-height: 20vh; --sidebar-height: auto; }
+		html,body{height:100%;margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+		body{display:flex;flex-direction:column;gap:24px;padding:24px;background:#fff}
+		header{display:flex;align-items:center;gap:12px}
+		h1{font-size:1.25rem;margin:0}
+
+		/* Layout for Sidebar / Playground / Bottom bar */
+		.app-layout { position:relative; min-height:60vh; }
+
+		/* Defaults: sidebar on the left, bottombar at bottom, playground uses leftover space */
+		.sidebar {
+			position:fixed;
+			left:0;
+			top:0;
+			bottom:0; /* allow sidebar to extend under bottom bar so they intersect */
+			width: var(--sidebar-width);
+			background: #eef2ff;
+			padding: 16px;
+			box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+			z-index: 3;
+		}
+
+		.bottombar {
+			position:fixed;
+			left:0;
+			right:0;
+			bottom:0;
+			height: var(--bottom-height);
+			background: #fff7ed;
+			padding: 0;
+			box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+			z-index: 2; /* below sidebar so sidebar visually overlaps */
+		}
+
+		.playground {
+			margin-left: var(--sidebar-width);
+			margin-bottom: var(--bottom-height);
+			padding: 20px;
+			min-height: calc(100vh - var(--bottom-height));
+			background: #ffffff;
+			overflow:auto;
+		}
+
+		/* Reuse content-inner styles for consistent spacing */
+		.content-inner { max-width: 900px; }
+
+		/* Button container for bottombar - two equal-width buttons */
+		.button-container {
+			display: flex;
+			gap: 0;
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		/* Square buttons - half width each, full height of bottombar */
+		.square-btn {
+			flex: 1;
+			height: var(--bottom-height);
+			padding: 0;
+			border: none;
+			background: #0ea5a4;
+			color: #fff;
+			font-size: 1rem;
+			font-weight: 600;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: background 0.2s ease;
+		}
+
+		.square-btn:hover {
+			background: #0d8f8c;
+		}
+
+		.square-btn:active {
+			background: #0a6b67;
+		}
+
+		/* On small screens (phone), stack: sidebar becomes a top bar, bottombar remains bottom, playground between */
+		@media (max-width: 480px) {
+			:root { --sidebar-width: 100vw; --bottom-height: 20vh; --sidebar-height: 20vh; }
+			.sidebar { position:fixed; left:0; right:0; top:0; height: var(--sidebar-height); width:100%; bottom: auto; z-index:3 }
+			.playground { margin-left:0; margin-top: var(--sidebar-height); margin-bottom: var(--bottom-height); min-height: calc(100vh - var(--sidebar-height) - var(--bottom-height)); }
+			.bottombar { left:0; right:0; bottom:0; height: var(--bottom-height); }
+		}
+
+		/* Make container visually centered with max width typical for desktop apps */
+		.container { max-width:1280px; margin:0 auto; width:100% }
+
+		/* small utility for demo items */
+		.item-number { font-weight:700; color:var(--accent); font-size:1.1rem }
+
+		/* Responsive fallback: on very small screens, let grid be single column */
+		@media (max-width:420px){ .five-column { grid-template-columns: 1fr !important; } }
+	</style>
+</head>
+<body>
+	<header class="container">
+		<h1>Responsive 5-Column Demo</h1>
+	</header>
+
+	<main class="container">
+		<!-- Three-section layout: Sidebar (left 20%), Playground (center), Bottom bar (bottom 20%).
+				 Sidebar and Bottom bar are positioned so they visually intersect at the bottom-left corner. -->
+		<div class="app-layout">
+			<aside class="sidebar" aria-label="Sidebar">
+				<div class="content-inner">
+					<h2>Sidebar</h2>
+					<p>Navigation or controls</p>
+				</div>
+			</aside>
+
+			<section class="playground" aria-label="Playground">
+				<div class="pg-inner">
+					<h2>Playground</h2>
+					<p>This area fills the remaining space not occupied by the sidebar and bottom bar. Resize the window to see responsive behavior across desktop, tablet and phone.</p>
+				</div>
+			</section>
+
+			<div class="bottombar" aria-label="Bottom bar">
+				<div class="button-container">
+					<button class="square-btn">Button 1</button>
+					<button class="square-btn">Button 2</button>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<footer class="container" style="font-size:0.9rem;color:#556">
+		<p>Files linked: <code>desktop_size.js</code>, <code>tablet_size.js</code>, <code>phone_size.js</code></p>
+	</footer>
+
+	<!-- Load scripts as modules so they can export/init as needed -->
+	<script type="module" src="./display and css/desktop_size.js"></script>
+	<script type="module" src="./display and css/tablet_size.js"></script>
+	<script type="module" src="./display and css/phone_size.js"></script>
+</body>
+</html>

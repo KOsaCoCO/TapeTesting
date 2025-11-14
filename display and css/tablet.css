@@ -1,0 +1,23 @@
+/* Tablet 3-column responsive layout CSS */
+/* Pairs with tablet_size.js for responsive sizing */
+
+.five-column > * {
+	padding: var(--tablet-item-padding, 12px);
+}
+
+.five-column button,
+.five-column .btn {
+	height: var(--tablet-button-height, 48px);
+	min-height: var(--tablet-button-height, 48px);
+	font-size: var(--tablet-min-font-size, 15px);
+	padding: 0 14px;
+}
+
+/* Tablet-specific adjustments for 3-column layout */
+@media (min-width: 481px) and (max-width: 1024px) {
+	.five-column {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--gap, 16px);
+	}
+}
