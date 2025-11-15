@@ -86,8 +86,8 @@
 		/* Hide the earlier pseudo-element tooltips; we'll use a floating tooltip appended to <body> */
 		.sidebar-btn[data-tip]::after,
 		.sidebar-btn[data-tip]::before,
-		.preview-btn[data-tip]::after,
-		.preview-btn[data-tip]::before {
+		.save-btn[data-tip]::after,
+		.save-btn[data-tip]::before {
 			display: none !important;
 		}
 
@@ -134,8 +134,8 @@
 			margin: 8px 0;
 		}
 
-		/* Preview button - full width, distinct styling */
-		.preview-btn {
+		/* Save button - full width, blue fill */
+		.save-btn {
 			position: relative;
 			width: 100%;
 			border: 2px solid var(--primary-color);
@@ -149,12 +149,12 @@
 			transition: all 0.2s ease;
 		}
 
-		.preview-btn:hover {
+		.save-btn:hover {
 			background: #1e40af;
 			border-color: #1e40af;
 		}
 
-		.preview-btn.active {
+		.save-btn.active {
 			background: #fff;
 			color: var(--primary-color);
 			border-color: var(--primary-color);
@@ -170,11 +170,46 @@
 			background: #fff;
 			flex: 1;
 			transition: margin-left 0.3s ease, margin-bottom 0.3s ease;
+			position: relative;
 		}
 
 		.playground.preview-mode {
 			margin-left: 0;
 			margin-bottom: 0;
+		}
+
+		/* Background environment image */
+		.playground-background {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+			opacity: 0;
+			transition: opacity 0.5s ease;
+			pointer-events: none;
+		}
+
+		.playground-background.visible {
+			opacity: 0.4;
+		}
+
+		/* Sticker note - always visible, centered */
+		.playground-sticker {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 700px;
+			max-width: 80%;
+			height: auto;
+			z-index: 0.5;
+			opacity: 0.9;
+			pointer-events: none;
 		}
 
 		.content-panel {
@@ -185,6 +220,15 @@
 			overflow-y: auto;
 			max-height: 100%;
 			padding-bottom: 40px;
+			transition: opacity 0.3s ease, transform 0.3s ease;
+			position: relative;
+			z-index: 1;
+		}
+
+		.playground.preview-mode .content-panel {
+			opacity: 0;
+			transform: scale(0.95);
+			pointer-events: none;
 		}
 
 		.content-panel h2 {
@@ -515,36 +559,192 @@
 			display: block;
 		}
 
-		.material-dropdown .title {
-			font-weight: 600;
-			margin-bottom: 8px;
-			font-size: 0.9rem;
+		/* Material popup windows - appear above bottom buttons */
+		.material-popup {
+			position: fixed;
+			bottom: calc(var(--bottom-height) + 20px);
+			width: 44%;
+			max-width: 500px;
+			height: 280px;
+			border: 6px solid var(--primary-color);
+			border-radius: 8px;
+			background: white;
+			box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+			z-index: 100001;
+			display: none;
+			opacity: 0;
+			transform: translateY(10px) scale(0.98);
+			transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.12s;
+			box-sizing: border-box;
+			overflow: hidden;
 		}
 
-		.material-option {
-			width: 100%;
-			padding: 8px;
-			border: 1px solid #e5e7eb;
-			border-radius: 4px;
-			background: #fff;
+		.material-popup.left { left: 6%; }
+		.material-popup.right { right: 6%; }
+
+		.material-popup.open {
+			display: flex;
+			opacity: 1;
+			transform: translateY(-10px) scale(1);
+		}
+
+		.popup-inner-content {
+			flex: 1;
+			display: flex;
+			padding: 18px;
+			box-sizing: border-box;
+			position: relative;
+		}
+
+		.popup-frame {
+			flex: 1;
+			border: 4px solid rgba(37, 99, 235, 0.15);
+			border-radius: 6px;
+			padding: 16px;
+			box-sizing: border-box;
+			background: #fbfbfb;
+			overflow-y: auto;
+			overflow-x: hidden;
+			position: relative;
+		}
+
+		.popup-close {
+			position: absolute;
+			top: 12px;
+			right: 12px;
+			border: none;
+			background: transparent;
+			font-size: 24px;
+			line-height: 1;
 			cursor: pointer;
-			font-size: 0.85rem;
-			margin-bottom: 4px;
-			text-align: left;
+			color: #6b7280;
+			padding: 4px 8px;
+			transition: color 0.2s ease;
+			z-index: 10;
+		}
+
+		.popup-close:hover { color: #1f2937; }
+
+		.popup-title {
+			margin: 0 0 16px 0;
+			font-size: 1.2rem;
+			font-weight: 600;
+			color: #1f2937;
+		}
+
+		/* Vertical scrollbar handle */
+		.popup-scrollbar {
+			width: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 4px;
+		}
+
+		.scrollbar-track {
+			width: 6px;
+			background: #e5e7eb;
+			border-radius: 8px;
+			height: 180px;
+			position: relative;
+		}
+
+		.scrollbar-thumb {
+			width: 6px;
+			height: 60px;
+			background: var(--primary-color);
+			border-radius: 4px;
+			position: absolute;
+			top: 0;
+			transition: top 0.1s ease;
+		}
+
+		/* Tape material pills (left popup) */
+		.material-pills {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			padding: 4px;
+		}
+
+		.material-pill {
+			background: #eff6ff;
+			padding: 14px 20px;
+			border-radius: 12px;
+			font-size: 1rem;
+			font-weight: 500;
+			color: #1f2937;
+			box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.03);
+			cursor: pointer;
 			transition: all 0.2s ease;
+			border: 2px solid transparent;
 		}
 
-		.material-option:last-child {
-			margin-bottom: 0;
+		.material-pill:hover {
+			background: #dbeafe;
+			transform: translateX(4px);
 		}
 
-		.material-option:hover {
-			background: #eff6ff;
-		}
-
-		.material-option.selected {
-			background: #eff6ff;
+		.material-pill.selected {
+			background: #bfdbfe;
 			border-color: var(--primary-color);
+			font-weight: 600;
+		}
+
+		/* Surface material grid (right popup) */
+		.material-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 16px;
+			align-items: start;
+			justify-items: center;
+		}
+
+		.material-tile-wrap {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+			cursor: pointer;
+		}
+
+		.material-tile {
+			width: 110px;
+			height: 75px;
+			border: 4px solid rgba(37, 99, 235, 0.2);
+			border-radius: 6px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			box-sizing: border-box;
+			background: white;
+			transition: all 0.2s ease;
+			overflow: hidden;
+		}
+
+		.material-tile-wrap:hover .material-tile {
+			border-color: var(--primary-color);
+			transform: translateY(-3px);
+			box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+		}
+
+		.material-tile.selected {
+			border-color: var(--primary-color);
+			border-width: 5px;
+			box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+		}
+
+		.material-tile svg {
+			width: 100%;
+			height: 100%;
+		}
+
+		.material-tile-label {
+			font-size: 0.85rem;
+			text-align: center;
+			color: #4b5563;
+			font-weight: 500;
 		}
 
 		.bottom-right {
@@ -712,14 +912,14 @@
 				</svg>
 			</button>
 
-			<button class="preview-btn" id="previewBtn" title="Preview mode - hides sidebar and bottom bar" data-tip="Toggle full-screen preview">
-				Preview
+			<button class="save-btn" data-panel="save" data-tip="Save current parameters">
+				Save Parameters
 			</button>
 
 			<div class="sidebar-divider"></div>
 
-			<button class="sidebar-btn" data-panel="save" data-tip="Download current parameters as JSON">
-				Save Parameters
+			<button class="sidebar-btn" id="previewBtn" title="Preview mode - hides sidebar and bottom bar" data-tip="Toggle full-screen preview">
+				Preview
 			</button>
 
 			<button class="sidebar-btn" data-panel="history" data-tip="View recent changes">
@@ -739,6 +939,8 @@
 
 		<!-- Main Playground -->
 		<section class="playground" aria-label="Playground">
+			<div class="playground-background" id="playgroundBackground"></div>
+			<img src="./images/Sticker_note.jpg" alt="Sticker note" class="playground-sticker" />
 			<div class="content-panel" id="contentPanel">
 				<!-- Content inserted here by JS -->
 			</div>
@@ -764,10 +966,6 @@
 						<span class="material-badge">T</span>
 						<span>Tape Material</span>
 					</button>
-					<div class="material-dropdown" id="tapeMaterialDropdown">
-						<div class="title">Tape Material</div>
-						<!-- Options added by JS -->
-					</div>
 				</div>
 
 				<div class="material-selector">
@@ -775,15 +973,48 @@
 						<span class="material-badge">S</span>
 						<span>Surface Material</span>
 					</button>
-					<div class="material-dropdown" id="surfaceMaterialDropdown">
-						<div class="title">Surface Material</div>
-						<!-- Options added by JS -->
-					</div>
 				</div>
 
 				<div class="bottom-right">
 					<div class="status" id="statusText">Current: PVC on Steel</div>
 					<button class="apply-btn" id="applyBtn">Apply</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Material popup windows -->
+	<!-- Tape Material Popup (Left) -->
+	<div class="material-popup left" id="tapePopup">
+		<div class="popup-inner-content">
+			<div class="popup-frame">
+				<button class="popup-close" id="closeTapePopup" title="Close">&times;</button>
+				<h3 class="popup-title">Tape Materials</h3>
+				<div class="material-pills" id="tapePills">
+					<!-- Pills added by JS -->
+				</div>
+			</div>
+			<div class="popup-scrollbar">
+				<div class="scrollbar-track">
+					<div class="scrollbar-thumb" id="tapeScrollThumb"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Surface Material Popup (Right) -->
+	<div class="material-popup right" id="surfacePopup">
+		<div class="popup-inner-content">
+			<div class="popup-frame">
+				<button class="popup-close" id="closeSurfacePopup" title="Close">&times;</button>
+				<h3 class="popup-title">Surface Materials</h3>
+				<div class="material-grid" id="surfaceGrid">
+					<!-- Tiles added by JS -->
+				</div>
+			</div>
+			<div class="popup-scrollbar">
+				<div class="scrollbar-track">
+					<div class="scrollbar-thumb" id="surfaceScrollThumb"></div>
 				</div>
 			</div>
 		</div>
@@ -807,7 +1038,7 @@
 		// UI State
 		const state = {
 			activePanel: 'dimensions',
-			params: { width: 100, height: 80, tape: 'PVC', surface: 'Steel', temperature: 23, humidity: 50, thickness: 120, adhesive: 'Acrylic' },
+			params: { width: 100, height: 80, tape: 'PVC', surface: 'Steel', temperature: 23, humidity: 50, thickness: 120, adhesive: 'Acrylic', environment: 'Dry' },
 			history: [],
 			experiments: [],
 			showGuidelines: false,
@@ -878,41 +1109,160 @@
 					break;
 
 				case 'specifics':
+					// Calculate tape properties based on material, thickness, and adhesive
+					const calculateTapeProperties = () => {
+						const { tape, thickness, adhesive } = state.params;
+						
+						// Base values by tape material (finished product properties)
+						const tapeBase = {
+							'PVC': { peel: 8.5, hold: 12, stretch: 25 },      // Standard office tape, minimal stretch
+							'PET': { peel: 10, hold: 18, stretch: 8 },        // Polyester - very rigid, high strength
+							'PP': { peel: 7, hold: 10, stretch: 40 },         // Polypropylene - moderate stretch in finished form
+							'Paper': { peel: 5, hold: 6, stretch: 2 },        // Paper backing - virtually no stretch
+							'Cloth': { peel: 9, hold: 15, stretch: 12 }       // Cloth/fabric - limited controlled stretch
+						};
+						
+						// Adhesive multipliers
+						const adhesiveMultiplier = {
+							'Acrylic': { peel: 1.0, hold: 1.0, stretch: 1.0 },
+							'Rubber': { peel: 1.3, hold: 0.9, stretch: 1.15 },     // Rubber adds slight elasticity
+							'Silicone': { peel: 0.8, hold: 1.2, stretch: 0.9 }     // Silicone reduces stretch
+						};
+						
+						// Thickness factor (normalized to 120µm baseline)
+						const thicknessFactor = thickness / 120;
+						const thicknessEffect = {
+							peel: 0.9 + (thicknessFactor * 0.1),
+							hold: 0.85 + (thicknessFactor * 0.15),
+							stretch: 1.0 - ((thicknessFactor - 1) * 0.08)  // Thicker tape = less stretch
+						};
+						
+						const base = tapeBase[tape] || tapeBase['PVC'];
+						const mult = adhesiveMultiplier[adhesive] || adhesiveMultiplier['Acrylic'];
+						
+						return {
+							peel: (base.peel * mult.peel * thicknessEffect.peel).toFixed(1),
+							hold: (base.hold * mult.hold * thicknessEffect.hold).toFixed(1),
+							stretch: (base.stretch * mult.stretch * thicknessEffect.stretch).toFixed(1)
+						};
+					};
+					
+					const props = calculateTapeProperties();
+					
 					panel.innerHTML = `
 						<h2>Specifics</h2>
-						<p>Specific parameters: thickness, adhesive type, colour, tolerances, notes.</p>
+						<p>Specific parameters: thickness, adhesive type, and calculated properties.</p>
 						<div class="form-grid">
 							<div class="form-group">
-								<label>Thickness (µm)</label>
-								<input type="number" value="120" />
+								<label style="display: flex; align-items: center; gap: 8px;">
+									Thickness (µm)
+									<span style="font-size: 0.75rem; color: #6b7280; font-weight: 400;">(3M Scotch 508: 51 µm)</span>
+								</label>
+								<input type="number" id="thicknessInput" value="${state.params.thickness}" />
 							</div>
 							<div class="form-group">
 								<label>Adhesive</label>
-								<select>
-									<option>Acrylic</option>
-									<option>Rubber</option>
-									<option>Silicone</option>
+								<select id="adhesiveSelect">
+									<option ${state.params.adhesive === 'Acrylic' ? 'selected' : ''}>Acrylic</option>
+									<option ${state.params.adhesive === 'Rubber' ? 'selected' : ''}>Rubber</option>
+									<option ${state.params.adhesive === 'Silicone' ? 'selected' : ''}>Silicone</option>
 								</select>
 							</div>
 						</div>
-					`;
-					break;
-
-				case 'environment':
-					panel.innerHTML = `
-						<h2>Environment</h2>
-						<p>Choose environmental conditions used for the calculation / preview.</p>
-						<div class="form-grid">
-							<div class="form-group">
-								<label>Temperature (°C)</label>
-								<input type="number" value="23" />
-							</div>
-							<div class="form-group">
-								<label>Humidity (%)</label>
-								<input type="number" value="50" />
+						
+						<div style="margin-top: 24px; padding: 16px; background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 8px;">
+							<h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #374151;">Calculated Properties</h3>
+							<div style="display: flex; flex-direction: column; gap: 10px;">
+								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+									<span style="font-weight: 500; color: #4b5563;">Peel Strength:</span>
+									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.peel} N/cm</span>
+								</div>
+								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+									<span style="font-weight: 500; color: #4b5563;">Hold Strength:</span>
+									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.hold} N/cm²</span>
+								</div>
+								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+									<span style="font-weight: 500; color: #4b5563;">Stretch:</span>
+									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.stretch}%</span>
+								</div>
 							</div>
 						</div>
 					`;
+					
+					// Add event listeners to update parameters and recalculate
+					const thicknessInput = document.getElementById('thicknessInput');
+					const adhesiveSelect = document.getElementById('adhesiveSelect');
+					
+					thicknessInput.addEventListener('change', (e) => {
+						state.params.thickness = parseInt(e.target.value) || 120;
+						saveState();
+						renderContent('specifics');
+					});
+					
+					adhesiveSelect.addEventListener('change', (e) => {
+						state.params.adhesive = e.target.value;
+						saveState();
+						renderContent('specifics');
+					});
+					break;
+
+				case 'environment':
+					const envData = {
+						'Humid': { temp: '15-25°C', humidity: '70-90%' },
+						'Tropical': { temp: '25-35°C', humidity: '75-95%' },
+						'Semiarid': { temp: '20-30°C', humidity: '30-50%' },
+						'Arid': { temp: '25-40°C', humidity: '10-30%' },
+						'Dry': { temp: '18-25°C', humidity: '20-40%' }
+					};
+					
+					panel.innerHTML = `
+						<h2>Environment</h2>
+						<p>Select the environmental condition for the experiment.</p>
+						<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+							${['Humid', 'Tropical', 'Semiarid', 'Arid', 'Dry'].map(env => `
+								<div class="environment-choice ${state.params.environment === env ? 'selected' : ''}" 
+									 data-env="${env}"
+									 style="border: 2px solid ${state.params.environment === env ? '#2563eb' : '#d1d5db'}; 
+											border-radius: 6px; 
+											padding: 14px 18px; 
+											background: ${state.params.environment === env ? '#eff6ff' : '#fff'}; 
+											cursor: pointer;
+											transition: all 0.2s ease;
+											font-weight: ${state.params.environment === env ? '600' : '400'};
+											display: flex;
+											justify-content: space-between;
+											align-items: center;">
+									<span>• ${env}</span>
+									<span style="font-size: 0.8rem; color: #6b7280; font-weight: 400;">${envData[env].temp}, ${envData[env].humidity}</span>
+								</div>
+							`).join('')}
+						</div>
+					`;
+					
+					// Add click handlers for environment choices
+					document.querySelectorAll('.environment-choice').forEach(choice => {
+						choice.addEventListener('click', () => {
+							const env = choice.getAttribute('data-env');
+							state.params.environment = env;
+							updatePlaygroundBackground(env);
+							saveState();
+							renderContent('environment');
+						});
+						
+						choice.addEventListener('mouseenter', function() {
+							if (state.params.environment !== this.getAttribute('data-env')) {
+								this.style.background = '#f3f4f6';
+								this.style.borderColor = '#9ca3af';
+							}
+						});
+						
+						choice.addEventListener('mouseleave', function() {
+							if (state.params.environment !== this.getAttribute('data-env')) {
+								this.style.background = '#fff';
+								this.style.borderColor = '#d1d5db';
+							}
+						});
+					});
 					break;
 
 
@@ -928,7 +1278,7 @@
 										<div><strong>Dimensions:</strong> ${exp.data.width} × ${exp.data.height} mm</div>
 										<div><strong>Tape Material:</strong> ${exp.data.tape}</div>
 										<div><strong>Surface Material:</strong> ${exp.data.surface}</div>
-										<div><strong>Environment:</strong> ${exp.data.temperature}°C, ${exp.data.humidity}% humidity</div>
+										<div><strong>Environment:</strong> ${exp.data.environment || 'Dry'}</div>
 										<div><strong>Thickness:</strong> ${exp.data.thickness} µm</div>
 										<div><strong>Adhesive:</strong> ${exp.data.adhesive}</div>
 									</div>
@@ -955,7 +1305,7 @@
 		}
 
 		// Sidebar button handlers (click to open, click again to close)
-		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
+		document.querySelectorAll('.sidebar-btn[data-panel], .save-btn[data-panel]').forEach(btn => {
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
 				const panelName = btn.getAttribute('data-panel');
@@ -974,8 +1324,17 @@
 					state.experiments.push(snapshot);
 					addHistory(`Saved experiment: ${experimentName}`);
 					saveState();
-					document.getElementById('saveNotice').classList.add('show');
-					setTimeout(() => document.getElementById('saveNotice').classList.remove('show'), 2000);
+					
+					// Show save indicator
+					const saveNotice = document.getElementById('saveNotice');
+					saveNotice.textContent = `✓ Experiment ${experimentNum} Saved`;
+					saveNotice.classList.add('show');
+					setTimeout(() => saveNotice.classList.remove('show'), 2500);
+					
+					// If history panel is open, refresh it
+					if (state.activePanel === 'history') {
+						renderContent('history');
+					}
 					return;
 				}
 
@@ -1022,61 +1381,172 @@
 			location.reload();
 		});
 
-		// Material selector buttons
-		function setupMaterialSelector(btnId, dropdownId, optionsArray, key) {
-			const btn = document.getElementById(btnId);
-			const dropdown = document.getElementById(dropdownId);
-			const titleDiv = dropdown.querySelector('.title');
+		// Material popup windows with pills (tape) and grid tiles (surface)
+		const tapePopup = document.getElementById('tapePopup');
+		const surfacePopup = document.getElementById('surfacePopup');
+		const tapePillsContainer = document.getElementById('tapePills');
+		const surfaceGridContainer = document.getElementById('surfaceGrid');
 
-			// Populate options
-			optionsArray.forEach(opt => {
-				const optBtn = document.createElement('button');
-				optBtn.className = 'material-option';
-				optBtn.textContent = opt;
-				if (opt === state.params[key]) optBtn.classList.add('selected');
-				optBtn.addEventListener('click', () => {
-					state.params[key] = opt;
-					document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
-					addHistory(`${key === 'tape' ? 'Tape' : 'Surface'} selected: ${opt}`);
-					dropdown.classList.remove('open');
-					renderContent();
-				});
-				dropdown.appendChild(optBtn);
-			});
+		// Extended tape options
+		const tapeMaterials = [
+			{ name: 'PVC', display: 'PVC (Polyvinyl Chloride)' },
+			{ name: 'PET', display: 'PET (Polyester Film)' },
+			{ name: 'PP', display: 'PP (Polypropylene)' },
+			{ name: 'Paper', display: 'Paper Tape' },
+			{ name: 'Cloth', display: 'Cloth / Fabric' },
+			{ name: 'Foam', display: 'Foam / Cushion' }
+		];
 
-			// Position and toggle dropdown on click only
-			btn.addEventListener('click', (e) => {
-				e.stopPropagation();
-				const isOpen = dropdown.classList.contains('open');
-				
-				if (!isOpen) {
-					// Close all other dropdowns first
-					document.querySelectorAll('.material-dropdown.open').forEach(d => {
-						if (d !== dropdown) d.classList.remove('open');
-					});
-					
-					// Position dropdown as fixed popup above the button
-					const rect = btn.getBoundingClientRect();
-					dropdown.style.left = (rect.left + window.scrollX) + 'px';
-					dropdown.style.top = (rect.top + window.scrollY - 10) + 'px';
-					dropdown.style.transform = 'translateY(-100%)';
-					
-					dropdown.classList.add('open');
-				} else {
-					dropdown.classList.remove('open');
-				}
-			});
+		// Surface materials with SVG patterns
+		const surfaceMaterials = [
+			{ name: 'Steel', label: 'Steel', svg: '<rect width="100%" height="100%" fill="#e8eaed"/><g stroke="#9ca3af" stroke-width="2"><line x1="10" y1="20" x2="110" y2="20"/><line x1="10" y1="40" x2="110" y2="40"/><line x1="10" y1="60" x2="110" y2="60"/></g>' },
+			{ name: 'Aluminum', label: 'Aluminum', svg: '<rect width="100%" height="100%" fill="#f3f4f6"/><circle cx="30" cy="25" r="4" fill="#d1d5db"/><circle cx="80" cy="25" r="4" fill="#d1d5db"/><circle cx="30" cy="55" r="4" fill="#d1d5db"/><circle cx="80" cy="55" r="4" fill="#d1d5db"/>' },
+			{ name: 'Glass', label: 'Glass', svg: '<rect width="100%" height="100%" fill="#f0f9ff"/><rect x="15" y="15" width="80" height="45" fill="none" stroke="#7dd3fc" stroke-width="3"/><path d="M20 25 L90 50" stroke="#bae6fd" stroke-width="1" opacity="0.5"/>' },
+			{ name: 'Plastic', label: 'Plastic', svg: '<rect width="100%" height="100%" fill="#fef3c7"/><rect x="10" y="15" width="90" height="50" fill="none" stroke="#fbbf24" stroke-width="4" stroke-opacity="0.6"/>' },
+			{ name: 'Wood', label: 'Wood', svg: '<rect width="100%" height="100%" fill="#fff8ef"/><path d="M10 15 C30 22, 30 40, 50 38 M70 12 C82 22, 92 30, 110 24" stroke="#b86d2d" stroke-width="3" fill="none"/><path d="M10 45 C30 52, 30 65, 50 63" stroke="#b86d2d" stroke-width="2" fill="none" opacity="0.5"/>' },
+			{ name: 'Paper', label: 'Paper', svg: '<rect width="100%" height="100%" fill="#fffbeb"/><g fill="#fbbf24" opacity="0.3"><ellipse cx="25" cy="25" rx="3" ry="5"/><ellipse cx="55" cy="30" rx="3" ry="5"/><ellipse cx="85" cy="20" rx="3" ry="5"/><ellipse cx="70" cy="50" rx="3" ry="5"/></g>' }
+		];
 
-			// Close on outside click
-			document.addEventListener('click', (e) => {
-				if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-					dropdown.classList.remove('open');
-				}
+		// Populate tape pills
+		tapeMaterials.forEach(mat => {
+			const pill = document.createElement('div');
+			pill.className = 'material-pill';
+			if (mat.name === state.params.tape) pill.classList.add('selected');
+			pill.textContent = mat.display;
+			pill.addEventListener('click', () => {
+				state.params.tape = mat.name;
+				document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
+				addHistory(`Tape selected: ${mat.name}`);
+				updatePillSelection();
+				closeTapePopup();
+				renderContent();
 			});
+			tapePillsContainer.appendChild(pill);
+		});
+
+		// Populate surface tiles
+		surfaceMaterials.forEach(mat => {
+			const wrap = document.createElement('div');
+			wrap.className = 'material-tile-wrap';
+			
+			const tile = document.createElement('div');
+			tile.className = 'material-tile';
+			if (mat.name === state.params.surface) tile.classList.add('selected');
+			tile.innerHTML = `<svg viewBox="0 0 120 80" preserveAspectRatio="none">${mat.svg}</svg>`;
+			
+			const label = document.createElement('div');
+			label.className = 'material-tile-label';
+			label.textContent = mat.label;
+			
+			wrap.appendChild(tile);
+			wrap.appendChild(label);
+			
+			wrap.addEventListener('click', () => {
+				state.params.surface = mat.name;
+				document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
+				addHistory(`Surface selected: ${mat.name}`);
+				updateTileSelection();
+				closeSurfacePopup();
+				renderContent();
+			});
+			
+			surfaceGridContainer.appendChild(wrap);
+		});
+
+		function updatePillSelection() {
+			document.querySelectorAll('.material-pill').forEach(pill => {
+				pill.classList.remove('selected');
+			});
+			const pills = Array.from(document.querySelectorAll('.material-pill'));
+			const selectedPill = pills.find(p => {
+				const text = p.textContent;
+				const mat = tapeMaterials.find(m => text.includes(m.name));
+				return mat && mat.name === state.params.tape;
+			});
+			if (selectedPill) selectedPill.classList.add('selected');
 		}
 
-		setupMaterialSelector('tapeMaterialBtn', 'tapeMaterialDropdown', tapeOptions, 'tape');
-		setupMaterialSelector('surfaceMaterialBtn', 'surfaceMaterialDropdown', surfaceOptions, 'surface');
+		function updateTileSelection() {
+			document.querySelectorAll('.material-tile').forEach(tile => {
+				tile.classList.remove('selected');
+			});
+			const tiles = Array.from(document.querySelectorAll('.material-tile-wrap'));
+			const selectedTile = tiles.find(wrap => {
+				const label = wrap.querySelector('.material-tile-label').textContent;
+				const mat = surfaceMaterials.find(m => m.label === label);
+				return mat && mat.name === state.params.surface;
+			});
+			if (selectedTile) selectedTile.querySelector('.material-tile').classList.add('selected');
+		}
+
+		// Popup control functions
+		function openTapePopup() {
+			tapePopup.classList.add('open');
+			closeSurfacePopup();
+		}
+
+		function closeTapePopup() {
+			tapePopup.classList.remove('open');
+		}
+
+		function toggleTapePopup() {
+			tapePopup.classList.contains('open') ? closeTapePopup() : openTapePopup();
+		}
+
+		function openSurfacePopup() {
+			surfacePopup.classList.add('open');
+			closeTapePopup();
+		}
+
+		function closeSurfacePopup() {
+			surfacePopup.classList.remove('open');
+		}
+
+		function toggleSurfacePopup() {
+			surfacePopup.classList.contains('open') ? closeSurfacePopup() : openSurfacePopup();
+		}
+
+		// Button event listeners
+		document.getElementById('tapeMaterialBtn').addEventListener('click', toggleTapePopup);
+		document.getElementById('surfaceMaterialBtn').addEventListener('click', toggleSurfacePopup);
+		document.getElementById('closeTapePopup').addEventListener('click', closeTapePopup);
+		document.getElementById('closeSurfacePopup').addEventListener('click', closeSurfacePopup);
+
+		// Close popups on outside click
+		document.addEventListener('click', (e) => {
+			const path = e.composedPath ? e.composedPath() : (e.path || []);
+			if (!path.includes(tapePopup) && !path.includes(document.getElementById('tapeMaterialBtn'))) {
+				closeTapePopup();
+			}
+			if (!path.includes(surfacePopup) && !path.includes(document.getElementById('surfaceMaterialBtn'))) {
+				closeSurfacePopup();
+			}
+		});
+
+		// Close popups on ESC key
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				closeTapePopup();
+				closeSurfacePopup();
+			}
+		});
+
+		// Sync scrollbar thumbs with scroll position
+		const tapeFrame = document.querySelector('#tapePopup .popup-frame');
+		const surfaceFrame = document.querySelector('#surfacePopup .popup-frame');
+		const tapeThumb = document.getElementById('tapeScrollThumb');
+		const surfaceThumb = document.getElementById('surfaceScrollThumb');
+
+		function syncScrollbar(frame, thumb) {
+			if (!frame || !thumb) return;
+			const track = thumb.parentElement;
+			const maxTop = track.clientHeight - thumb.clientHeight;
+			const scrollRatio = frame.scrollTop / Math.max(1, (frame.scrollHeight - frame.clientHeight));
+			thumb.style.top = `${Math.round(scrollRatio * maxTop)}px`;
+		}
+
+		if (tapeFrame) tapeFrame.addEventListener('scroll', () => syncScrollbar(tapeFrame, tapeThumb));
+		if (surfaceFrame) surfaceFrame.addEventListener('scroll', () => syncScrollbar(surfaceFrame, surfaceThumb));
 
 		// Apply button
 		document.getElementById('applyBtn').addEventListener('click', () => {
@@ -1132,6 +1602,7 @@
 			const middlebar = document.querySelector('.middlebar');
 			const bottombar = document.querySelector('.bottombar');
 			const playground = document.querySelector('.playground');
+			const contentPanel = document.querySelector('.content-panel');
 			const previewBtn = document.getElementById('previewBtn');
 
 			if (state.previewMode) {
@@ -1175,9 +1646,32 @@
 			}
 		});
 
+		// Function to update playground background based on environment
+		function updatePlaygroundBackground(environment) {
+			const background = document.getElementById('playgroundBackground');
+			if (!background) return;
+			
+			const imageMap = {
+				'Humid': './images/Humid.jpg',
+				'Tropical': './images/Tropical.jpg',
+				'Semiarid': './images/Semiarid.jpg',
+				'Arid': './images/Arid.jpg',
+				'Dry': './images/Dry.jpg'
+			};
+			
+			const imagePath = imageMap[environment];
+			if (imagePath) {
+				background.style.backgroundImage = `url('${imagePath}')`;
+				background.classList.add('visible');
+			} else {
+				background.classList.remove('visible');
+			}
+		}
+
 		// Initialize
 		loadState();
 		renderContent();
+		updatePlaygroundBackground(state.params.environment || 'Dry');
 		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
 			if (btn.getAttribute('data-panel') === state.activePanel) {
 				btn.classList.add('active');
@@ -1193,7 +1687,7 @@
 			
 			if (!track || !handle || !progress || !valueDisplay) return;
 
-			let sliderValue = 366; // default to max (366 days)
+			let sliderValue = 0; // default to 0 days
 			let isDragging = false;
 
 			function updateSlider(clientX) {
@@ -1256,9 +1750,10 @@
 				}
 			});
 
-			// Initialize at max value (366)
-			handle.style.left = '100%';
-			progress.style.width = '100%';
+			// Initialize at 0
+			handle.style.left = '0%';
+			progress.style.width = '0%';
+			valueDisplay.textContent = '0';
 		}
 
 		initTimeSlider();
