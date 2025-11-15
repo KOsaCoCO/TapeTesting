@@ -451,6 +451,55 @@
 			display: block;
 		}
 
+		/* Preview mode left buttons */
+		.preview-left-buttons {
+			position: fixed;
+			left: 30px;
+			top: 50%;
+			transform: translateY(-50%);
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+			z-index: 41;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease;
+		}
+
+		.preview-left-buttons.show {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.preview-tape-btn {
+			background: rgba(0, 0, 0, 0.85);
+			backdrop-filter: blur(8px);
+			border: 2px solid rgba(255, 255, 255, 0.2);
+			color: #fff;
+			padding: 16px 24px;
+			border-radius: 12px;
+			font-size: 0.95rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			text-align: center;
+			min-width: 140px;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		}
+
+		.preview-tape-btn:hover {
+			background: rgba(37, 99, 235, 0.9);
+			border-color: rgba(255, 255, 255, 0.4);
+			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+			transform: translateX(5px);
+		}
+
+		.preview-tape-btn.active {
+			background: rgba(37, 99, 235, 0.95);
+			border-color: #60a5fa;
+			box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+		}
+
 		/* Bottom bar */
 		.bottombar {
 			position: fixed;
@@ -1071,6 +1120,12 @@
 		</div>
 		<input type="range" min="0" max="366" value="0" class="time-slider" id="timeSlider" orient="vertical" />
 		<div class="slider-label">Time Impact</div>
+	</div>
+
+	<!-- Left buttons in preview mode -->
+	<div class="preview-left-buttons" id="previewLeftButtons">
+		<button class="preview-tape-btn" id="variantTapeBtn">Variant Tape</button>
+		<button class="preview-tape-btn" id="regularTapeBtn">Regular Tape</button>
 	</div>
 
 	<!-- Floating tooltip shown above all content -->
@@ -1855,10 +1910,13 @@
 		// Show/hide preview slider
 		function togglePreviewSlider() {
 			const slider = document.getElementById('previewSlider');
+			const leftButtons = document.getElementById('previewLeftButtons');
 			if (state.previewMode) {
 				slider.classList.add('show');
+				leftButtons.classList.add('show');
 			} else {
 				slider.classList.remove('show');
+				leftButtons.classList.remove('show');
 			}
 		}
 
@@ -1867,6 +1925,19 @@
 			if (e.key === 'Escape' && state.previewMode) {
 				document.getElementById('previewBtn').click();
 			}
+		});
+
+		// Preview mode button handlers (placeholders for now)
+		document.getElementById('variantTapeBtn').addEventListener('click', () => {
+			console.log('Variant Tape button clicked');
+			// TODO: Add variant tape preview functionality
+			addHistory('Variant Tape preview selected');
+		});
+
+		document.getElementById('regularTapeBtn').addEventListener('click', () => {
+			console.log('Regular Tape button clicked');
+			// TODO: Add regular tape preview functionality
+			addHistory('Regular Tape preview selected');
 		});
 
 		// Function to update playground background based on environment
