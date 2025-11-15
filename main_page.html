@@ -163,7 +163,7 @@
 		/* Playground / Main content area */
 		.playground {
 			margin-left: var(--sidebar-width);
-			margin-bottom: calc(var(--bottom-height) + 50px);
+			margin-bottom: var(--bottom-height);
 			padding: 20px;
 			box-sizing: border-box;
 			overflow-y: auto;
@@ -171,11 +171,13 @@
 			flex: 1;
 			transition: margin-left 0.3s ease, margin-bottom 0.3s ease;
 			position: relative;
+			height: calc(100vh - var(--bottom-height));
 		}
 
 		.playground.preview-mode {
 			margin-left: 0;
 			margin-bottom: 0;
+			height: 100vh;
 		}
 
 		/* Background environment image */
@@ -218,7 +220,9 @@
 			background: #f9fafb;
 			padding: 24px;
 			overflow-y: auto;
-			max-height: 100%;
+			max-height: calc(100vh - var(--bottom-height) - 48px);
+			height: fit-content;
+			box-sizing: border-box;
 			padding-bottom: 40px;
 			transition: opacity 0.3s ease, transform 0.3s ease;
 			position: relative;
@@ -339,132 +343,112 @@
 			font-size: 0.9rem;
 		}
 
-		/* Middle section - above bottom bar */
-		.middlebar {
+		/* Time slider in preview mode - Vertical on right side */
+		.preview-slider-container {
 			position: fixed;
-			left: var(--sidebar-width);
-			right: 0;
-			bottom: var(--bottom-height);
-			height: 50px;
-			background: #fff;
-			border-top: 4px solid var(--primary-color);
-			padding: 0 95px;
-			box-sizing: border-box;
-			z-index: 2;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			overflow: hidden;
-			transition: transform 0.3s ease, opacity 0.3s ease;
-		}
-
-		.middlebar-line {
-			width: 100%;
-			height: 4px;
-			background: #e5e7eb;
-			border-radius: 2px;
-			position: relative;
-			margin: 20px 0;
-			cursor: pointer;
-		}
-
-		.slider-progress {
-			position: absolute;
-			left: 0;
-			top: 0;
-			height: 100%;
-			background: var(--primary-color);
-			border-radius: 2px;
-			width: 0%;
-			pointer-events: none;
-			transition: width 0.05s ease;
-		}
-
-		.slider-handle {
-			position: absolute;
+			right: 30px;
 			top: 50%;
-			left: 0%;
-			transform: translate(-50%, -50%);
-			width: 16px;
-			height: 16px;
-			background: var(--primary-color);
+			transform: translateY(-50%);
+			height: 400px;
+			max-height: 70vh;
+			background: rgba(0, 0, 0, 0.85);
+			padding: 24px 20px;
+			border-radius: 12px;
+			z-index: 41;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease;
+			backdrop-filter: blur(8px);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 16px;
+		}
+
+		.preview-slider-container.show {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.slider-label {
+			font-size: 0.75rem;
+			color: rgba(255, 255, 255, 0.9);
+			text-align: center;
+			font-weight: 500;
+			writing-mode: vertical-rl;
+			text-orientation: mixed;
+			transform: rotate(180deg);
+			margin: 0;
+		}
+
+		.time-slider {
+			width: 6px;
+			height: 100%;
+			-webkit-appearance: slider-vertical;
+			appearance: slider-vertical;
+			background: rgba(255, 255, 255, 0.2);
+			border-radius: 3px;
+			outline: none;
+			cursor: pointer;
+			writing-mode: bt-lr;
+			flex: 1;
+		}
+
+		.time-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 18px;
+			height: 18px;
+			background: #3b82f6;
 			border: 2px solid #fff;
 			border-radius: 50%;
 			cursor: grab;
-			box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-			transition: transform 0.05s ease, box-shadow 0.2s ease;
-			z-index: 2;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 		}
 
-		.slider-handle:hover {
-			box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-			transform: translate(-50%, -50%) scale(1.15);
+		.time-slider::-webkit-slider-thumb:hover {
+			background: #2563eb;
+			box-shadow: 0 3px 12px rgba(0,0,0,0.4);
 		}
 
-		.slider-handle:active,
-		.slider-handle.dragging {
+		.time-slider::-webkit-slider-thumb:active {
 			cursor: grabbing;
-			box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-			transform: translate(-50%, -50%) scale(1.2);
+			box-shadow: 0 4px 16px rgba(0,0,0,0.5);
 		}
 
-		.middlebar-labels {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			width: 100%;
-			height: 100%;
-			position: absolute;
-			left: 0;
-			right: 0;
-			top: 0;
-			padding: 0 95px;
-			box-sizing: border-box;
-			pointer-events: none;
+		.time-slider::-moz-range-thumb {
+			width: 18px;
+			height: 18px;
+			background: #3b82f6;
+			border: 2px solid #fff;
+			border-radius: 50%;
+			cursor: grab;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 		}
 
-		/* Left and right gap containers for labels (centered in the padding gaps)
-		   The .middlebar-line defines the visible slider line; these containers
-		   occupy the left/right padding area and center their content. */
-		.middlebar-gap {
-			width: 95px; /* matches middlebar padding */
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			pointer-events: none;
+		.time-slider::-moz-range-thumb:hover {
+			background: #2563eb;
+			box-shadow: 0 3px 12px rgba(0,0,0,0.4);
 		}
 
-		/* Left gap: keep label near the sidebar edge */
-		.middlebar-gap:first-child {
-			justify-content: flex-start;
+		.time-slider::-moz-range-thumb:active {
+			cursor: grabbing;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.5);
 		}
 
-		.middlebar-gap:first-child span {
-			margin-left: -40px; /* move 40px closer to sidebar edge */
-		}
-
-		/* Right gap: align label toward the display edge and nudge outward */
-		.middlebar-gap:last-child {
-			justify-content: flex-end;
-		}
-
-		.middlebar-gap:last-child span {
-			margin-right: -40px; /* move 40px closer to display edge - mirrors left */
-		}
-
-		.middlebar-gap span {
+		.slider-value-display {
+			text-align: center;
 			font-size: 0.9rem;
+			color: rgba(255, 255, 255, 0.9);
 			font-weight: 600;
-			color: var(--primary-color);
-			display: inline-block;
-			transform: translateY(-2px); /* small vertical nudge so it visually clears the line */
 		}
 
-		.middlebar.hidden {
-			transform: translateY(100%);
-			opacity: 0;
-			pointer-events: none;
+		.slider-current-value {
+			color: #60a5fa;
+			font-size: 1.15rem;
+			font-weight: 700;
+			text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+			display: block;
 		}
 
 		/* Bottom bar */
@@ -632,6 +616,26 @@
 			color: #1f2937;
 		}
 
+		.mixing-header {
+			font-size: 0.75rem;
+			color: #6b7280;
+			margin: 0 0 12px 0;
+			padding-bottom: 8px;
+			border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+			text-align: center;
+		}
+
+		.tape-columns-container {
+			display: flex;
+			gap: 12px;
+			width: 100%;
+		}
+
+		.tape-column {
+			flex: 1;
+			min-width: 0;
+		}
+
 		/* Vertical scrollbar handle */
 		.popup-scrollbar {
 			width: 20px;
@@ -663,7 +667,7 @@
 		.material-pills {
 			display: flex;
 			flex-direction: column;
-			gap: 12px;
+			gap: 8px;
 			padding: 4px;
 		}
 
@@ -738,6 +742,19 @@
 		.material-tile svg {
 			width: 100%;
 			height: 100%;
+		}
+
+		.material-tile img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			object-position: center;
+		}
+
+		.material-tile img[src*="glass.png"] {
+			transform: rotate(90deg);
+			width: 140%;
+			height: 140%;
 		}
 
 		.material-tile-label {
@@ -816,6 +833,25 @@
 			pointer-events: auto;
 		}
 
+		/* QR Code */
+		.qr-code {
+			display: none;
+			margin: 20px auto 0;
+			text-align: center;
+			position: relative;
+			z-index: 1;
+		}
+
+		.qr-code.show {
+			display: block;
+		}
+
+		.qr-code img {
+			width: 200px;
+			height: auto;
+			display: inline-block;
+		}
+
 		/* Phone/responsive */
 		@media (max-width: 480px) {
 			:root {
@@ -864,12 +900,6 @@
 				bottom: 0;
 			}
 
-			.middlebar {
-				left: 0;
-				right: 0;
-				bottom: var(--bottom-height);
-			}
-
 			.bottom-content {
 				flex-wrap: wrap;
 				justify-content: center;
@@ -881,6 +911,13 @@
 				justify-content: center;
 				margin-left: 0;
 				margin-top: 8px;
+			}
+
+			.preview-slider-container {
+				right: 10px;
+				height: 50vh;
+				max-height: 50vh;
+				padding: 16px 12px;
 			}
 
 			.form-grid {
@@ -946,21 +983,16 @@
 			</div>
 		</section>
 
-		<!-- Middle Section - above bottom bar -->
-		<div class="middlebar" aria-label="Middle bar">
-			<div class="middlebar-line" id="sliderTrack" data-tip="Time Impact Slider">
-				<div class="slider-progress" id="sliderProgress"></div>
-				<div class="slider-handle" id="sliderHandle"></div>
-			</div>
-			<div class="middlebar-labels">
-				<div class="middlebar-gap"><span>0</span></div>
-				<div class="middlebar-gap"><span id="sliderValue">366</span></div>
-			</div>
-		</div>
-
 		<!-- Bottom Bar -->
 		<div class="bottombar" aria-label="Bottom bar">
 			<div class="bottom-content">
+				<div class="material-selector">
+					<button class="material-btn" id="variantBtn">
+						<span class="material-badge">V</span>
+						<span>Variant</span>
+					</button>
+				</div>
+
 				<div class="material-selector">
 					<button class="material-btn" id="tapeMaterialBtn">
 						<span class="material-badge">T</span>
@@ -974,11 +1006,6 @@
 						<span>Surface Material</span>
 					</button>
 				</div>
-
-				<div class="bottom-right">
-					<div class="status" id="statusText">Current: PVC on Steel</div>
-					<button class="apply-btn" id="applyBtn">Apply</button>
-				</div>
 			</div>
 		</div>
 	</div>
@@ -990,8 +1017,18 @@
 			<div class="popup-frame">
 				<button class="popup-close" id="closeTapePopup" title="Close">&times;</button>
 				<h3 class="popup-title">Tape Materials</h3>
-				<div class="material-pills" id="tapePills">
-					<!-- Pills added by JS -->
+				<div class="mixing-header">Choose types for mixing</div>
+				<div class="tape-columns-container">
+					<div class="tape-column">
+						<div class="material-pills" id="tapePills1">
+							<!-- Pills added by JS -->
+						</div>
+					</div>
+					<div class="tape-column">
+						<div class="material-pills" id="tapePills2">
+							<!-- Pills added by JS -->
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="popup-scrollbar">
@@ -1027,12 +1064,39 @@
 	<!-- Preview mode hint -->
 	<div class="preview-hint" id="previewHint">Press ESC to exit preview mode</div>
 
+	<!-- Time slider in preview mode -->
+	<div class="preview-slider-container" id="previewSlider">
+		<div class="slider-value-display">
+			<span class="slider-current-value"><span id="sliderValue">0</span> days</span>
+		</div>
+		<input type="range" min="0" max="366" value="0" class="time-slider" id="timeSlider" orient="vertical" />
+		<div class="slider-label">Time Impact</div>
+	</div>
+
 	<!-- Floating tooltip shown above all content -->
 	<div id="floatingTip" class="floating-tip" aria-hidden="true"></div>
 
 	<script type="module" src="./display and css/desktop_size.js"></script>
 	<script type="module" src="./display and css/tablet_size.js"></script>
 	<script type="module" src="./display and css/phone_size.js"></script>
+
+	<script type="module">
+		// Import calculation functions
+		import { calculateTapeProperties, getMaterialInfo, calculateMixedTapeProperties, BACKING_MATERIALS, ADHESIVE_TYPES, SURFACE_MATERIALS, ENVIRONMENTAL_CONDITIONS } from './display and css/math_reasoning.js';
+		
+		// Make functions available globally
+		window.calculateTapeProperties = calculateTapeProperties;
+		window.getMaterialInfo = getMaterialInfo;
+		window.calculateMixedTapeProperties = calculateMixedTapeProperties;
+		window.BACKING_MATERIALS = BACKING_MATERIALS;
+		window.ADHESIVE_TYPES = ADHESIVE_TYPES;
+		window.SURFACE_MATERIALS = SURFACE_MATERIALS;
+		window.ENVIRONMENTAL_CONDITIONS = ENVIRONMENTAL_CONDITIONS;
+		
+		// Signal that the module is loaded
+		window.mathModuleLoaded = true;
+		window.dispatchEvent(new Event('mathModuleReady'));
+	</script>
 
 	<script>
 		// UI State
@@ -1043,7 +1107,9 @@
 			experiments: [],
 			showGuidelines: false,
 			materialPanel: { tape: false, surface: false },
-			previewMode: false
+			previewMode: false,
+			timeImpactDays: 0,
+			mixedTapes: { tape1: null, tape2: null }
 		};
 
 		const tapeOptions = ['PVC', 'Polypropylene', 'Cloth', 'Foam'];
@@ -1082,190 +1148,238 @@
 			const { width, height } = state.params;
 
 			switch (state.activePanel) {
-				case 'dimensions':
-					panel.innerHTML = `
-						<h2>Dimensions</h2>
-						<div class="form-grid">
-							<div class="form-group">
-								<label>Width (mm)</label>
-								<input type="number" id="widthInput" value="${width}" />
+			case 'dimensions':
+				// Get backing material info
+				const backingInfo = window.getMaterialInfo('backing', state.params.tape) || {};
+				const totalThickness = window.calculateTapeProperties ? 
+					window.calculateTapeProperties(state.params).totalThickness : 
+					(backingInfo.typicalThickness?.standard || 120);
+				
+				panel.innerHTML = `
+					<h2>Dimensions</h2>
+					<p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">Sample dimensions and backing material specifications</p>
+					<div class="form-grid">
+						<div class="form-group">
+							<label>Width (mm)</label>
+							<input type="number" id="widthInput" value="${width}" />
+						</div>
+						<div class="form-group">
+							<label>Height (mm)</label>
+							<input type="number" id="heightInput" value="${height}" />
+						</div>
+					</div>
+					
+					${backingInfo.name ? `
+					<div style="margin-top: 24px; padding: 16px; background: #f0f9ff; border: 2px solid #bfdbfe; border-radius: 8px;">
+						<h3 style="margin: 0 0 12px 0; font-size: 0.95rem; color: #1e40af; font-weight: 600;">Selected Backing: ${backingInfo.name}</h3>
+						<div style="font-size: 0.85rem; line-height: 1.7; color: #374151;">
+							<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #dbeafe;">
+								<span>Typical Thickness:</span>
+								<strong>${backingInfo.typicalThickness?.standard || 120} µm</strong>
 							</div>
-							<div class="form-group">
-								<label>Height (mm)</label>
-								<input type="number" id="heightInput" value="${height}" />
+							<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #dbeafe;">
+								<span>Range:</span>
+								<strong>${backingInfo.typicalThickness?.min || 0}-${backingInfo.typicalThickness?.max || 0} µm</strong>
+							</div>
+							<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #dbeafe;">
+								<span>Elongation:</span>
+								<strong>${backingInfo.elongation || 0}%</strong>
+							</div>
+							<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #dbeafe;">
+								<span>Temp Range:</span>
+								<strong>${backingInfo.temperatureRange?.min || 0}°C to ${backingInfo.temperatureRange?.max || 0}°C</strong>
+							</div>
+							<div style="display: flex; justify-content: space-between; padding: 4px 0;">
+								<span>UV Resistance:</span>
+								<strong style="text-transform: capitalize;">${backingInfo.uvResistance || 'N/A'}</strong>
 							</div>
 						</div>
-					`;
-					document.getElementById('widthInput').addEventListener('change', (e) => {
-						state.params.width = Number(e.target.value);
-						addHistory(`Width set to ${e.target.value}`);
-						renderContent();
-					});
-					document.getElementById('heightInput').addEventListener('change', (e) => {
-						state.params.height = Number(e.target.value);
-						addHistory(`Height set to ${e.target.value}`);
-						renderContent();
-					});
-					break;
-
-				case 'specifics':
-					// Calculate tape properties based on material, thickness, and adhesive
-					const calculateTapeProperties = () => {
-						const { tape, thickness, adhesive } = state.params;
-						
-						// Base values by tape material (finished product properties)
-						const tapeBase = {
-							'PVC': { peel: 8.5, hold: 12, stretch: 25 },      // Standard office tape, minimal stretch
-							'PET': { peel: 10, hold: 18, stretch: 8 },        // Polyester - very rigid, high strength
-							'PP': { peel: 7, hold: 10, stretch: 40 },         // Polypropylene - moderate stretch in finished form
-							'Paper': { peel: 5, hold: 6, stretch: 2 },        // Paper backing - virtually no stretch
-							'Cloth': { peel: 9, hold: 15, stretch: 12 }       // Cloth/fabric - limited controlled stretch
-						};
-						
-						// Adhesive multipliers
-						const adhesiveMultiplier = {
-							'Acrylic': { peel: 1.0, hold: 1.0, stretch: 1.0 },
-							'Rubber': { peel: 1.3, hold: 0.9, stretch: 1.15 },     // Rubber adds slight elasticity
-							'Silicone': { peel: 0.8, hold: 1.2, stretch: 0.9 }     // Silicone reduces stretch
-						};
-						
-						// Thickness factor (normalized to 120µm baseline)
-						const thicknessFactor = thickness / 120;
-						const thicknessEffect = {
-							peel: 0.9 + (thicknessFactor * 0.1),
-							hold: 0.85 + (thicknessFactor * 0.15),
-							stretch: 1.0 - ((thicknessFactor - 1) * 0.08)  // Thicker tape = less stretch
-						};
-						
-						const base = tapeBase[tape] || tapeBase['PVC'];
-						const mult = adhesiveMultiplier[adhesive] || adhesiveMultiplier['Acrylic'];
-						
-						return {
-							peel: (base.peel * mult.peel * thicknessEffect.peel).toFixed(1),
-							hold: (base.hold * mult.hold * thicknessEffect.hold).toFixed(1),
-							stretch: (base.stretch * mult.stretch * thicknessEffect.stretch).toFixed(1)
-						};
-					};
+						<p style="margin: 12px 0 0 0; font-size: 0.8rem; color: #6b7280; font-style: italic;">${backingInfo.description || ''}</p>
+					</div>
+					` : ''}
+				`;
+				document.getElementById('widthInput').addEventListener('change', (e) => {
+					state.params.width = Number(e.target.value);
+					addHistory(`Width set to ${e.target.value}`);
+					renderContent();
+				});
+				document.getElementById('heightInput').addEventListener('change', (e) => {
+					state.params.height = Number(e.target.value);
+					addHistory(`Height set to ${e.target.value}`);
+					renderContent();
+				});
+				break;			case 'specifics':
+				// Calculate tape properties using imported function
+				const calculationParams = {
+					...state.params,
+					timeImpactDays: state.timeImpactDays || 0
+				};
+				
+				const props = window.calculateTapeProperties ? 
+					window.calculateTapeProperties(calculationParams) : 
+					{ peel: '2.60', hold: '6.50', stretch: '25.0', totalThickness: 120 };
+				
+				// Get adhesive info
+				const adhesiveInfo = window.getMaterialInfo ? 
+					window.getMaterialInfo('adhesive', state.params.adhesive) : null;
+				
+				panel.innerHTML = `
+					<h2>Specifics</h2>
+					<p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">Adhesive properties and calculated performance metrics</p>
+					<div class="form-grid">
+						<div class="form-group">
+							<label style="display: flex; align-items: center; gap: 8px;">
+								Adhesive Thickness (µm)
+								<span style="font-size: 0.75rem; color: #6b7280; font-weight: 400;">(affects contact area)</span>
+							</label>
+							<input type="number" id="thicknessInput" value="${state.params.thickness}" min="10" max="500" step="5" />
+						</div>
+						<div class="form-group">
+							<label>Adhesive Type</label>
+							<select id="adhesiveSelect">
+								<option ${state.params.adhesive === 'Acrylic' ? 'selected' : ''}>Acrylic</option>
+								<option ${state.params.adhesive === 'Rubber' ? 'selected' : ''}>Rubber</option>
+								<option ${state.params.adhesive === 'Silicone' ? 'selected' : ''}>Silicone</option>
+							</select>
+						</div>
+					</div>
 					
-					const props = calculateTapeProperties();
-					
-					panel.innerHTML = `
-						<h2>Specifics</h2>
-						<p>Specific parameters: thickness, adhesive type, and calculated properties.</p>
-						<div class="form-grid">
-							<div class="form-group">
-								<label style="display: flex; align-items: center; gap: 8px;">
-									Thickness (µm)
-									<span style="font-size: 0.75rem; color: #6b7280; font-weight: 400;">(3M Scotch 508: 51 µm)</span>
-								</label>
-								<input type="number" id="thicknessInput" value="${state.params.thickness}" />
+					${adhesiveInfo ? `
+					<div style="margin-top: 16px; padding: 14px; background: #fffbeb; border: 2px solid #fde68a; border-radius: 8px;">
+						<h3 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #92400e; font-weight: 600;">Adhesive: ${adhesiveInfo.name}</h3>
+						<div style="font-size: 0.8rem; line-height: 1.6; color: #78350f;">
+							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+								<div style="padding: 4px 0;"><strong>Tack:</strong> ${adhesiveInfo.tackLevel || 'N/A'}</div>
+								<div style="padding: 4px 0;"><strong>UV:</strong> ${adhesiveInfo.uvResistance || 'N/A'}</div>
+								<div style="padding: 4px 0;"><strong>Aging:</strong> ${adhesiveInfo.agingStability || 'N/A'}</div>
+								<div style="padding: 4px 0;"><strong>Temp:</strong> ${adhesiveInfo.temperatureRange?.min || 0}°C to ${adhesiveInfo.temperatureRange?.max || 0}°C</div>
 							</div>
-							<div class="form-group">
-								<label>Adhesive</label>
-								<select id="adhesiveSelect">
-									<option ${state.params.adhesive === 'Acrylic' ? 'selected' : ''}>Acrylic</option>
-									<option ${state.params.adhesive === 'Rubber' ? 'selected' : ''}>Rubber</option>
-									<option ${state.params.adhesive === 'Silicone' ? 'selected' : ''}>Silicone</option>
-								</select>
+							<p style="margin: 4px 0 0 0; font-size: 0.75rem; font-style: italic;">${adhesiveInfo.description || ''}</p>
+						</div>
+					</div>
+					` : ''}
+					
+					<div style="margin-top: 20px; padding: 16px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px;">
+						<h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #166534; font-weight: 600;">Calculated Performance</h3>
+						<div style="display: flex; flex-direction: column; gap: 10px;">
+							<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 4px;">
+								<span style="font-weight: 500; color: #166534;">Peel Adhesion:</span>
+								<span style="font-weight: 700; color: #15803d; font-size: 1.15rem;">${props.peel} N/cm</span>
+							</div>
+							<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 4px;">
+								<span style="font-weight: 500; color: #166534;">Shear/Hold Strength:</span>
+								<span style="font-weight: 700; color: #15803d; font-size: 1.15rem;">${props.hold} N/cm²</span>
+							</div>
+							<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 4px;">
+								<span style="font-weight: 500; color: #166534;">Elongation at Break:</span>
+								<span style="font-weight: 700; color: #15803d; font-size: 1.15rem;">${props.stretch}%</span>
+							</div>
+							<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #dcfce7; border-radius: 4px;">
+								<span style="font-weight: 500; color: #166534;">Total Thickness:</span>
+								<span style="font-weight: 700; color: #15803d; font-size: 1.15rem;">${props.totalThickness} µm</span>
 							</div>
 						</div>
-						
-						<div style="margin-top: 24px; padding: 16px; background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 8px;">
-							<h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #374151;">Calculated Properties</h3>
-							<div style="display: flex; flex-direction: column; gap: 10px;">
-								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-									<span style="font-weight: 500; color: #4b5563;">Peel Strength:</span>
-									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.peel} N/cm</span>
+						<p style="margin: 12px 0 0 0; font-size: 0.75rem; color: #166534; font-style: italic;">Values calculated based on ${state.params.tape} backing + ${state.params.adhesive} adhesive on ${state.params.surface} surface in ${state.params.environment} conditions.</p>
+					</div>
+				`;
+				
+				// Add event listeners to update parameters and recalculate
+				const thicknessInput = document.getElementById('thicknessInput');
+				const adhesiveSelect = document.getElementById('adhesiveSelect');
+				
+				thicknessInput.addEventListener('change', (e) => {
+					state.params.thickness = parseInt(e.target.value) || 120;
+					saveState();
+					renderContent('specifics');
+				});
+				
+				adhesiveSelect.addEventListener('change', (e) => {
+					state.params.adhesive = e.target.value;
+					saveState();
+					renderContent('specifics');
+				});
+				break;			case 'environment':
+				// Get environment data from imported module
+				const envConditions = window.ENVIRONMENTAL_CONDITIONS || {
+					'Humid': { name: 'Humid', temperature: { min: 15, max: 25 }, humidity: { min: 70, max: 90 }, description: 'High moisture', adhesionMultiplier: 0.75 },
+					'Tropical': { name: 'Tropical', temperature: { min: 25, max: 35 }, humidity: { min: 75, max: 95 }, description: 'Hot & humid', adhesionMultiplier: 0.65 },
+					'Semiarid': { name: 'Semiarid', temperature: { min: 20, max: 30 }, humidity: { min: 30, max: 50 }, description: 'Balanced', adhesionMultiplier: 0.95 },
+					'Arid': { name: 'Arid', temperature: { min: 25, max: 40 }, humidity: { min: 10, max: 30 }, description: 'Hot & dry', adhesionMultiplier: 0.85 },
+					'Dry': { name: 'Dry', temperature: { min: 18, max: 25 }, humidity: { min: 20, max: 40 }, description: 'Ideal', adhesionMultiplier: 1.0 }
+				};
+				
+				const currentEnv = envConditions[state.params.environment] || envConditions['Dry'];
+				
+				panel.innerHTML = `
+					<h2>Environment</h2>
+					<p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">Climate conditions affect adhesive performance significantly</p>
+					<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+						${['Humid', 'Tropical', 'Semiarid', 'Arid', 'Dry'].map(env => {
+							const envInfo = envConditions[env];
+							const isSelected = state.params.environment === env;
+							const performanceClass = envInfo.adhesionMultiplier >= 0.95 ? 'excellent' : 
+													 envInfo.adhesionMultiplier >= 0.80 ? 'good' : 
+													 envInfo.adhesionMultiplier >= 0.70 ? 'fair' : 'poor';
+							const performanceColor = performanceClass === 'excellent' ? '#10b981' : 
+													 performanceClass === 'good' ? '#3b82f6' : 
+													 performanceClass === 'fair' ? '#f59e0b' : '#ef4444';
+							return `
+							<div class="environment-choice ${isSelected ? 'selected' : ''}" 
+								 data-env="${env}"
+								 style="border: 2px solid ${isSelected ? '#2563eb' : '#d1d5db'}; 
+										border-radius: 6px; 
+										padding: 12px 16px; 
+										background: ${isSelected ? '#eff6ff' : '#fff'}; 
+										cursor: pointer;
+										transition: all 0.2s ease;">
+								<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+									<span style="font-weight: ${isSelected ? '600' : '500'}; color: #1f2937;">• ${envInfo.name || env}</span>
+									<span style="font-size: 0.7rem; padding: 2px 8px; background: ${performanceColor}; color: #fff; border-radius: 12px; text-transform: uppercase; font-weight: 600;">${performanceClass}</span>
 								</div>
-								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-									<span style="font-weight: 500; color: #4b5563;">Hold Strength:</span>
-									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.hold} N/cm²</span>
+								<div style="display: flex; gap: 16px; font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">
+									<span>🌡️ ${envInfo.temperature.min}-${envInfo.temperature.max}°C</span>
+									<span>💧 ${envInfo.humidity.min}-${envInfo.humidity.max}%</span>
 								</div>
-								<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-									<span style="font-weight: 500; color: #4b5563;">Stretch:</span>
-									<span style="font-weight: 600; color: #2563eb; font-size: 1.1rem;">${props.stretch}%</span>
-								</div>
+								<div style="font-size: 0.75rem; color: #9ca3af; font-style: italic;">${envInfo.description || ''}</div>
 							</div>
+						`}).join('')}
+					</div>
+					
+					<div style="margin-top: 20px; padding: 14px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px;">
+						<h3 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #92400e; font-weight: 600;">Current: ${currentEnv.name || state.params.environment}</h3>
+						<div style="font-size: 0.8rem; line-height: 1.7; color: #78350f;">
+							<div style="margin-bottom: 6px;"><strong>Adhesion Factor:</strong> ${(currentEnv.adhesionMultiplier * 100).toFixed(0)}% of baseline</div>
+							<div style="margin-bottom: 6px;"><strong>Aging Rate:</strong> ${currentEnv.agingFactor ? (currentEnv.agingFactor * 100).toFixed(0) + '% of normal' : 'Standard'}</div>
+							<p style="margin: 8px 0 0 0; font-size: 0.75rem; font-style: italic; border-top: 1px solid #fcd34d; padding-top: 8px;">${currentEnv.description || 'Environmental conditions impact adhesive tack, wet-out, and long-term stability.'}</p>
 						</div>
-					`;
-					
-					// Add event listeners to update parameters and recalculate
-					const thicknessInput = document.getElementById('thicknessInput');
-					const adhesiveSelect = document.getElementById('adhesiveSelect');
-					
-					thicknessInput.addEventListener('change', (e) => {
-						state.params.thickness = parseInt(e.target.value) || 120;
+					</div>
+				`;
+				
+				// Add click handlers for environment choices
+				document.querySelectorAll('.environment-choice').forEach(choice => {
+					choice.addEventListener('click', () => {
+						const env = choice.getAttribute('data-env');
+						state.params.environment = env;
+						updatePlaygroundBackground(env);
 						saveState();
-						renderContent('specifics');
+						renderContent('environment');
 					});
 					
-					adhesiveSelect.addEventListener('change', (e) => {
-						state.params.adhesive = e.target.value;
-						saveState();
-						renderContent('specifics');
+					choice.addEventListener('mouseenter', function() {
+						if (state.params.environment !== this.getAttribute('data-env')) {
+							this.style.background = '#f3f4f6';
+							this.style.borderColor = '#9ca3af';
+						}
 					});
-					break;
-
-				case 'environment':
-					const envData = {
-						'Humid': { temp: '15-25°C', humidity: '70-90%' },
-						'Tropical': { temp: '25-35°C', humidity: '75-95%' },
-						'Semiarid': { temp: '20-30°C', humidity: '30-50%' },
-						'Arid': { temp: '25-40°C', humidity: '10-30%' },
-						'Dry': { temp: '18-25°C', humidity: '20-40%' }
-					};
 					
-					panel.innerHTML = `
-						<h2>Environment</h2>
-						<p>Select the environmental condition for the experiment.</p>
-						<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-							${['Humid', 'Tropical', 'Semiarid', 'Arid', 'Dry'].map(env => `
-								<div class="environment-choice ${state.params.environment === env ? 'selected' : ''}" 
-									 data-env="${env}"
-									 style="border: 2px solid ${state.params.environment === env ? '#2563eb' : '#d1d5db'}; 
-											border-radius: 6px; 
-											padding: 14px 18px; 
-											background: ${state.params.environment === env ? '#eff6ff' : '#fff'}; 
-											cursor: pointer;
-											transition: all 0.2s ease;
-											font-weight: ${state.params.environment === env ? '600' : '400'};
-											display: flex;
-											justify-content: space-between;
-											align-items: center;">
-									<span>• ${env}</span>
-									<span style="font-size: 0.8rem; color: #6b7280; font-weight: 400;">${envData[env].temp}, ${envData[env].humidity}</span>
-								</div>
-							`).join('')}
-						</div>
-					`;
-					
-					// Add click handlers for environment choices
-					document.querySelectorAll('.environment-choice').forEach(choice => {
-						choice.addEventListener('click', () => {
-							const env = choice.getAttribute('data-env');
-							state.params.environment = env;
-							updatePlaygroundBackground(env);
-							saveState();
-							renderContent('environment');
-						});
-						
-						choice.addEventListener('mouseenter', function() {
-							if (state.params.environment !== this.getAttribute('data-env')) {
-								this.style.background = '#f3f4f6';
-								this.style.borderColor = '#9ca3af';
-							}
-						});
-						
-						choice.addEventListener('mouseleave', function() {
-							if (state.params.environment !== this.getAttribute('data-env')) {
-								this.style.background = '#fff';
-								this.style.borderColor = '#d1d5db';
-							}
-						});
+					choice.addEventListener('mouseleave', function() {
+						if (state.params.environment !== this.getAttribute('data-env')) {
+							this.style.background = '#fff';
+							this.style.borderColor = '#d1d5db';
+						}
 					});
-					break;
-
-
+				});
+				break;
 			case 'history':
 				panel.innerHTML = `
 					<h2>Saved Experiments</h2>
@@ -1288,19 +1402,90 @@
 					`}
 				`;
 				break;
+			case 'variant':
+				const tape1 = state.mixedTapes.tape1;
+				const tape2 = state.mixedTapes.tape2;
+				
+				if (!tape1 || !tape2) {
+					panel.innerHTML = `
+						<h2>Tape Variant</h2>
+						<p style="color: #6b7280; font-size: 0.95rem;">Select two tape types from the "Tape Material" button in the bottom bar to see mixed properties.</p>
+					`;
+				} else {
+					// Calculate mixed properties
+					const mixedProps = window.calculateMixedTapeProperties ? 
+						window.calculateMixedTapeProperties({
+							tape1: tape1,
+							tape2: tape2,
+							surface: state.params.surface,
+							adhesive: state.params.adhesive,
+							environment: state.params.environment,
+							thickness: state.params.thickness,
+							timeImpactDays: state.timeImpactDays
+						}) : { peel: 'N/A', hold: 'N/A', stretch: 'N/A', totalThickness: 'N/A' };
+					
+					panel.innerHTML = `
+						<h2>Tape Variant - Mixed Properties</h2>
+						<p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">Combined properties of ${tape1} and ${tape2}</p>
+						
+						<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+							<div style="background: #f0f9ff; border: 2px solid #bfdbfe; border-radius: 8px; padding: 16px;">
+								<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">Tape 1</div>
+								<div style="font-size: 1.1rem; font-weight: 600; color: #1e40af;">${tape1}</div>
+							</div>
+							<div style="background: #f0f9ff; border: 2px solid #bfdbfe; border-radius: 8px; padding: 16px;">
+								<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">Tape 2</div>
+								<div style="font-size: 1.1rem; font-weight: 600; color: #1e40af;">${tape2}</div>
+							</div>
+						</div>
+						
+						<div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 20px;">
+							<h3 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #92400e;">Mixed Tape Properties</h3>
+							<div style="display: grid; gap: 12px; font-size: 0.9rem;">
+								<div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(255, 255, 255, 0.5); border-radius: 4px;">
+									<span>Peel Adhesion:</span>
+									<strong>${mixedProps.peel} N/cm</strong>
+								</div>
+								<div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(255, 255, 255, 0.5); border-radius: 4px;">
+									<span>Hold Strength:</span>
+									<strong>${mixedProps.hold} N/cm²</strong>
+								</div>
+								<div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(255, 255, 255, 0.5); border-radius: 4px;">
+									<span>Stretch:</span>
+									<strong>${mixedProps.stretch}%</strong>
+								</div>
+								<div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(255, 255, 255, 0.5); border-radius: 4px;">
+									<span>Total Thickness:</span>
+									<strong>${mixedProps.totalThickness} µm</strong>
+								</div>
+							</div>
+						</div>
+						
+						<p style="margin-top: 16px; font-size: 0.85rem; color: #6b7280; font-style: italic;">
+							Note: Mixed properties are calculated by averaging the characteristics of both tape types.
+						</p>
+					`;
+				}
+				break;
 			}
 			// Add guidelines if active
 			if (state.showGuidelines && state.activePanel !== 'history') {
 				panel.innerHTML += `
 					<div class="guidelines-box">
 						<h3>Guidelines</h3>
-						<ol>
-							<li>Keep safety margins in the design.</li>
-							<li>Validate adhesion on a sample first.</li>
-							<li>Record environment conditions with the build.</li>
-						</ol>
-					</div>
-				`;
+						<p style="font-size: 0.9rem; line-height: 1.6; margin: 0 0 12px 0;">
+							This is a locally made website with the help of AI and simple maths. To simulate real-world situations, environment behaviour, tape stickiness, tape strength, after-peel damage of new/existing tape variants. This is specifically made as a testing playground for my first Product UX RDI (research/design/innovation) case.
+						</p>
+						<p style="font-size: 0.9rem; line-height: 1.6; margin: 0;">
+							For More visit the LinkedIn page where I post the structured presentation on my research (coming soon on 17-11-25)
+						</p>
+				</div>
+				<div class="qr-code show">
+					<img src="./images/LinkedIn_QR.png" alt="" />
+				</div>
+			`;
+						} else {
+				// Hide QR code when guidelines are not shown
 			}
 		}
 
@@ -1384,7 +1569,8 @@
 		// Material popup windows with pills (tape) and grid tiles (surface)
 		const tapePopup = document.getElementById('tapePopup');
 		const surfacePopup = document.getElementById('surfacePopup');
-		const tapePillsContainer = document.getElementById('tapePills');
+		const tapePillsContainer1 = document.getElementById('tapePills1');
+		const tapePillsContainer2 = document.getElementById('tapePills2');
 		const surfaceGridContainer = document.getElementById('surfaceGrid');
 
 		// Extended tape options
@@ -1392,36 +1578,57 @@
 			{ name: 'PVC', display: 'PVC (Polyvinyl Chloride)' },
 			{ name: 'PET', display: 'PET (Polyester Film)' },
 			{ name: 'PP', display: 'PP (Polypropylene)' },
+			{ name: 'BOPP', display: 'BOPP (Biaxially Oriented Polypropylene)' },
 			{ name: 'Paper', display: 'Paper Tape' },
 			{ name: 'Cloth', display: 'Cloth / Fabric' },
 			{ name: 'Foam', display: 'Foam / Cushion' }
 		];
 
-		// Surface materials with SVG patterns
+		// Surface materials with texture images
 		const surfaceMaterials = [
-			{ name: 'Steel', label: 'Steel', svg: '<rect width="100%" height="100%" fill="#e8eaed"/><g stroke="#9ca3af" stroke-width="2"><line x1="10" y1="20" x2="110" y2="20"/><line x1="10" y1="40" x2="110" y2="40"/><line x1="10" y1="60" x2="110" y2="60"/></g>' },
-			{ name: 'Aluminum', label: 'Aluminum', svg: '<rect width="100%" height="100%" fill="#f3f4f6"/><circle cx="30" cy="25" r="4" fill="#d1d5db"/><circle cx="80" cy="25" r="4" fill="#d1d5db"/><circle cx="30" cy="55" r="4" fill="#d1d5db"/><circle cx="80" cy="55" r="4" fill="#d1d5db"/>' },
-			{ name: 'Glass', label: 'Glass', svg: '<rect width="100%" height="100%" fill="#f0f9ff"/><rect x="15" y="15" width="80" height="45" fill="none" stroke="#7dd3fc" stroke-width="3"/><path d="M20 25 L90 50" stroke="#bae6fd" stroke-width="1" opacity="0.5"/>' },
-			{ name: 'Plastic', label: 'Plastic', svg: '<rect width="100%" height="100%" fill="#fef3c7"/><rect x="10" y="15" width="90" height="50" fill="none" stroke="#fbbf24" stroke-width="4" stroke-opacity="0.6"/>' },
-			{ name: 'Wood', label: 'Wood', svg: '<rect width="100%" height="100%" fill="#fff8ef"/><path d="M10 15 C30 22, 30 40, 50 38 M70 12 C82 22, 92 30, 110 24" stroke="#b86d2d" stroke-width="3" fill="none"/><path d="M10 45 C30 52, 30 65, 50 63" stroke="#b86d2d" stroke-width="2" fill="none" opacity="0.5"/>' },
-			{ name: 'Paper', label: 'Paper', svg: '<rect width="100%" height="100%" fill="#fffbeb"/><g fill="#fbbf24" opacity="0.3"><ellipse cx="25" cy="25" rx="3" ry="5"/><ellipse cx="55" cy="30" rx="3" ry="5"/><ellipse cx="85" cy="20" rx="3" ry="5"/><ellipse cx="70" cy="50" rx="3" ry="5"/></g>' }
+			{ name: 'Steel', label: 'Steel', image: './images/textures/steel.jpeg' },
+			{ name: 'Aluminum', label: 'Aluminum', image: './images/textures/aluminum.jpeg' },
+			{ name: 'Glass', label: 'Glass', image: './images/textures/glass.png' },
+			{ name: 'Textured Glass', label: 'Textured Glass', image: './images/textures/textured_glass.png' },
+			{ name: 'Plastic Bag', label: 'Plastic Bag', image: './images/textures/plastic_bag.jpeg' },
+			{ name: 'Door Veneer', label: 'Door Veneer', image: './images/textures/door_veneer.jpeg' },
+			{ name: 'Paper Note', label: 'Paper Note', image: './images/textures/paper_note.png' },
+			{ name: 'Manga Paper', label: 'Manga Paper', image: './images/textures/manga_paper.jpeg' },
+			{ name: 'Sketchbook Paper', label: 'Sketchbook Paper', image: './images/textures/sketchbook_paper.jpeg' },
+			{ name: 'Rough Carton', label: 'Rough Carton', image: './images/textures/rough_carton.jpeg' },
+			{ name: 'Wall Paint', label: 'Wall Paint', image: './images/textures/wall_paint.jpeg' },
+			{ name: 'Damaged Wall Paint', label: 'Damaged Wall Paint', image: './images/textures/damaged_wall_paint.jpeg' },
+			{ name: 'Photo', label: 'Photo', image: './images/textures/photo.png' }
 		];
 
-		// Populate tape pills
+		// Populate tape pills - Column 1
 		tapeMaterials.forEach(mat => {
 			const pill = document.createElement('div');
 			pill.className = 'material-pill';
-			if (mat.name === state.params.tape) pill.classList.add('selected');
+			if (mat.name === state.mixedTapes.tape1) pill.classList.add('selected');
 			pill.textContent = mat.display;
 			pill.addEventListener('click', () => {
-				state.params.tape = mat.name;
-				document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
-				addHistory(`Tape selected: ${mat.name}`);
+				state.mixedTapes.tape1 = mat.name;
+				addHistory(`Tape 1 selected: ${mat.name}`);
 				updatePillSelection();
-				closeTapePopup();
 				renderContent();
 			});
-			tapePillsContainer.appendChild(pill);
+			tapePillsContainer1.appendChild(pill);
+		});
+
+		// Populate tape pills - Column 2
+		tapeMaterials.forEach(mat => {
+			const pill = document.createElement('div');
+			pill.className = 'material-pill';
+			if (mat.name === state.mixedTapes.tape2) pill.classList.add('selected');
+			pill.textContent = mat.display;
+			pill.addEventListener('click', () => {
+				state.mixedTapes.tape2 = mat.name;
+				addHistory(`Tape 2 selected: ${mat.name}`);
+				updatePillSelection();
+				renderContent();
+			});
+			tapePillsContainer2.appendChild(pill);
 		});
 
 		// Populate surface tiles
@@ -1432,7 +1639,11 @@
 			const tile = document.createElement('div');
 			tile.className = 'material-tile';
 			if (mat.name === state.params.surface) tile.classList.add('selected');
-			tile.innerHTML = `<svg viewBox="0 0 120 80" preserveAspectRatio="none">${mat.svg}</svg>`;
+			
+			const img = document.createElement('img');
+			img.src = mat.image;
+			img.alt = mat.label;
+			tile.appendChild(img);
 			
 			const label = document.createElement('div');
 			label.className = 'material-tile-label';
@@ -1443,7 +1654,6 @@
 			
 			wrap.addEventListener('click', () => {
 				state.params.surface = mat.name;
-				document.getElementById('statusText').textContent = `Current: ${state.params.tape} on ${state.params.surface}`;
 				addHistory(`Surface selected: ${mat.name}`);
 				updateTileSelection();
 				closeSurfacePopup();
@@ -1454,16 +1664,23 @@
 		});
 
 		function updatePillSelection() {
-			document.querySelectorAll('.material-pill').forEach(pill => {
+			// Update column 1
+			const pills1 = tapePillsContainer1.querySelectorAll('.material-pill');
+			pills1.forEach((pill, index) => {
 				pill.classList.remove('selected');
+				if (tapeMaterials[index].name === state.mixedTapes.tape1) {
+					pill.classList.add('selected');
+				}
 			});
-			const pills = Array.from(document.querySelectorAll('.material-pill'));
-			const selectedPill = pills.find(p => {
-				const text = p.textContent;
-				const mat = tapeMaterials.find(m => text.includes(m.name));
-				return mat && mat.name === state.params.tape;
+			
+			// Update column 2
+			const pills2 = tapePillsContainer2.querySelectorAll('.material-pill');
+			pills2.forEach((pill, index) => {
+				pill.classList.remove('selected');
+				if (tapeMaterials[index].name === state.mixedTapes.tape2) {
+					pill.classList.add('selected');
+				}
 			});
-			if (selectedPill) selectedPill.classList.add('selected');
 		}
 
 		function updateTileSelection() {
@@ -1548,9 +1765,13 @@
 		if (tapeFrame) tapeFrame.addEventListener('scroll', () => syncScrollbar(tapeFrame, tapeThumb));
 		if (surfaceFrame) surfaceFrame.addEventListener('scroll', () => syncScrollbar(surfaceFrame, surfaceThumb));
 
-		// Apply button
-		document.getElementById('applyBtn').addEventListener('click', () => {
-			addHistory(`Applied ${state.params.tape} to ${state.params.surface}`);
+		// Variant button - opens the variant panel in the sidebar
+		document.getElementById('variantBtn').addEventListener('click', () => {
+			state.activePanel = 'variant';
+			state.showGuidelines = false;
+			document.querySelectorAll('.sidebar-btn[data-panel]').forEach(b => b.classList.remove('active'));
+			renderContent();
+			addHistory('Opened Variant panel');
 		});
 
 		// Floating tooltip behavior: show a top-level tooltip so it won't be clipped by sidebar overflow
@@ -1599,7 +1820,6 @@
 		document.getElementById('previewBtn').addEventListener('click', () => {
 			state.previewMode = !state.previewMode;
 			const sidebar = document.querySelector('.sidebar');
-			const middlebar = document.querySelector('.middlebar');
 			const bottombar = document.querySelector('.bottombar');
 			const playground = document.querySelector('.playground');
 			const contentPanel = document.querySelector('.content-panel');
@@ -1607,20 +1827,19 @@
 
 			if (state.previewMode) {
 				sidebar.classList.add('hidden');
-				middlebar.classList.add('hidden');
 				bottombar.classList.add('hidden');
 				playground.classList.add('preview-mode');
 				previewBtn.classList.add('active');
 				addHistory('Entered Preview mode');
 			} else {
 				sidebar.classList.remove('hidden');
-				middlebar.classList.remove('hidden');
 				bottombar.classList.remove('hidden');
 				playground.classList.remove('preview-mode');
 				previewBtn.classList.remove('active');
 				addHistory('Exited Preview mode');
 			}
 			togglePreviewHint();
+			togglePreviewSlider();
 		});
 		
 		// Show/hide preview hint
@@ -1633,11 +1852,15 @@
 			}
 		}
 		
-		// Update preview button to show hint
-		const originalPreviewClick = document.getElementById('previewBtn').onclick;
-		document.getElementById('previewBtn').addEventListener('click', () => {
-			setTimeout(togglePreviewHint, 100);
-		});
+		// Show/hide preview slider
+		function togglePreviewSlider() {
+			const slider = document.getElementById('previewSlider');
+			if (state.previewMode) {
+				slider.classList.add('show');
+			} else {
+				slider.classList.remove('show');
+			}
+		}
 
 		// Allow ESC key to exit preview mode
 		document.addEventListener('keydown', (e) => {
@@ -1669,94 +1892,66 @@
 		}
 
 		// Initialize
-		loadState();
-		renderContent();
-		updatePlaygroundBackground(state.params.environment || 'Dry');
-		document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
-			if (btn.getAttribute('data-panel') === state.activePanel) {
-				btn.classList.add('active');
-			}
-		});
+		function initializeApp() {
+			loadState();
+			renderContent();
+			updatePlaygroundBackground(state.params.environment || 'Dry');
+			document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn => {
+				if (btn.getAttribute('data-panel') === state.activePanel) {
+					btn.classList.add('active');
+				}
+			});
+		}
+		
+		// Wait for math module to load before initializing
+		if (window.mathModuleLoaded) {
+			initializeApp();
+		} else {
+			window.addEventListener('mathModuleReady', initializeApp);
+		}
 
 		// Time Impact Slider functionality
 		function initTimeSlider() {
-			const track = document.getElementById('sliderTrack');
-			const handle = document.getElementById('sliderHandle');
-			const progress = document.getElementById('sliderProgress');
+			const slider = document.getElementById('timeSlider');
 			const valueDisplay = document.getElementById('sliderValue');
 			
-			if (!track || !handle || !progress || !valueDisplay) return;
-
-			let sliderValue = 0; // default to 0 days
-			let isDragging = false;
-
-			function updateSlider(clientX) {
-				const rect = track.getBoundingClientRect();
-				let percentage = ((clientX - rect.left) / rect.width) * 100;
-				percentage = Math.max(0, Math.min(100, percentage));
-				
-				const value = Math.round((percentage / 100) * 366);
-				sliderValue = value;
-				
-				handle.style.left = percentage + '%';
-				progress.style.width = percentage + '%';
-				valueDisplay.textContent = value;
+			if (!slider || !valueDisplay) {
+				console.error('Slider elements not found:', { slider, valueDisplay });
+				return;
 			}
 
-			// Click on track to move handle
-			track.addEventListener('click', (e) => {
-				if (e.target === handle) return;
-				updateSlider(e.clientX);
-			});
+			console.log('Initializing slider...', slider, valueDisplay);
 
-			// Drag handle
-			handle.addEventListener('mousedown', (e) => {
-				isDragging = true;
-				handle.classList.add('dragging');
-				e.preventDefault();
-			});
-
-			document.addEventListener('mousemove', (e) => {
-				if (!isDragging) return;
-				updateSlider(e.clientX);
-			});
-
-			document.addEventListener('mouseup', () => {
-				if (isDragging) {
-					isDragging = false;
-					handle.classList.remove('dragging');
-					addHistory(`Time impact set to ${sliderValue} days`);
+			// Update display and state when slider changes
+			slider.addEventListener('input', (e) => {
+				const value = parseInt(e.target.value);
+				console.log('Slider input:', value);
+				valueDisplay.textContent = value;
+				state.timeImpactDays = value;
+				
+				// Recalculate specifics if that panel is open
+				if (state.activePanel === 'specifics') {
+					renderContent();
 				}
 			});
 
-			// Touch support
-			handle.addEventListener('touchstart', (e) => {
-				isDragging = true;
-				handle.classList.add('dragging');
-				e.preventDefault();
+			// Add history entry when user releases slider
+			slider.addEventListener('change', (e) => {
+				const value = parseInt(e.target.value);
+				console.log('Slider change:', value);
+				addHistory(`Time impact set to ${value} days`);
 			});
-
-			document.addEventListener('touchmove', (e) => {
-				if (!isDragging) return;
-				const touch = e.touches[0];
-				updateSlider(touch.clientX);
-			});
-
-			document.addEventListener('touchend', () => {
-				if (isDragging) {
-					isDragging = false;
-					handle.classList.remove('dragging');
-					addHistory(`Time impact set to ${sliderValue} days`);
-				}
-			});
-
-			// Initialize at 0
-			handle.style.left = '0%';
-			progress.style.width = '0%';
+			
+			// Set initial value
 			valueDisplay.textContent = '0';
 		}
 
-		initTimeSlider();
+		// Call initTimeSlider after DOM is fully loaded
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initTimeSlider);
+		} else {
+			initTimeSlider();
+		}
 	</script>
 </body>
 </html>
