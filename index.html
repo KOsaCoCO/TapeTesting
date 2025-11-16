@@ -4,10 +4,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="description" content="Tape Testing UI - Responsive demo with sidebar, playground, and controls" />
-	<!-- Content Security Policy -->
-	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
 	<meta http-equiv="X-Content-Type-Options" content="nosniff" />
-	<meta http-equiv="X-Frame-Options" content="DENY" />
 	<meta http-equiv="X-XSS-Protection" content="1; mode=block" />
 	<meta name="referrer" content="no-referrer" />
 	<title>TapeTesting</title>
@@ -1386,56 +1383,163 @@
 				display: none;
 			}
 
-			.playground {
-				margin-left: 0;
-				margin-top: var(--sidebar-height);
-				margin-bottom: var(--bottom-height);
-				min-height: calc(100vh - var(--sidebar-height) - var(--bottom-height));
+		.playground {
+			margin-left: 0;
+			margin-top: var(--sidebar-height);
+			margin-bottom: var(--bottom-height);
+			min-height: calc(100vh - var(--sidebar-height) - var(--bottom-height));
+			height: calc(100vh - var(--sidebar-height) - var(--bottom-height));
+			overflow: hidden;
+			border: 2px solid var(--border-color);
+			border-top: none;
+			border-bottom: none;
+		}			.playground.preview-mode {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				margin: 0;
+				padding: 0;
+				overflow: hidden;
 			}
 
-			.bottombar {
+			.playground-background {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				background-size: cover;
+				background-position: center;
+				background-attachment: fixed;
+			}
+
+		.bottombar {
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: calc(80px + 20px);
+		}
+
+		.bottom-content {
+			flex-wrap: wrap;
+			justify-content: center;
+			padding: 8px 12px;
+			padding-top: 28px;
+		}
+
+		.bottom-right {
+			width: 100%;
+			justify-content: center;
+			margin-left: 0;
+			margin-top: 8px;
+		}
+
+		.content-panel {
+			max-height: calc(100vh - var(--sidebar-height) - 100px - 48px);
+			padding: 16px;
+			padding-bottom: 60px;
+		}
+
+		.preview-slider-container {
+			position: fixed;
+			left: 50%;
+			bottom: 70px;
+			transform: translateX(-50%);
+			width: 50%;
+			max-width: 200px;
+			height: auto;
+			padding: 0;
+			flex-direction: row;
+			gap: 8px;
+			align-items: center;
+			background: transparent;
+			backdrop-filter: none;
+			border-radius: 0;
+		}
+
+		.time-slider {
+			writing-mode: horizontal-tb;
+			direction: ltr;
+			width: 100%;
+			height: 4px;
+			-webkit-appearance: none;
+			appearance: none;
+			background: rgba(255, 255, 255, 0.3);
+			border-radius: 2px;
+			outline: none;
+		}
+
+		.time-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 12px;
+			height: 12px;
+			background: #fff;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+
+		.time-slider::-moz-range-thumb {
+			width: 12px;
+			height: 12px;
+			background: #fff;
+			border-radius: 50%;
+			cursor: pointer;
+			border: none;
+		}
+
+		.slider-label {
+			display: none;
+		}
+
+		.slider-value-display {
+			min-width: 50px;
+			font-size: 0.65rem;
+			color: #fff;
+			text-align: left;
+			white-space: nowrap;
+		}
+
+			/* Hide ESC hint on phone */
+			.preview-hint {
+				display: none !important;
+			}
+
+			/* Phone: Split preview buttons into left and right groups at top */
+			.preview-left-buttons {
 				left: 0;
 				right: 0;
-				bottom: 0;
-			}
-
-			.bottom-content {
-				flex-wrap: wrap;
-				justify-content: center;
-				padding: 8px 12px;
-			}
-
-			.bottom-right {
-				width: 100%;
-				justify-content: center;
-				margin-left: 0;
-				margin-top: 8px;
-			}
-
-			.preview-slider-container {
-				right: 10px;
-				height: 50vh;
-				max-height: 50vh;
-				padding: 16px 12px;
-			}
-
-			/* Phone: Move preview buttons to top horizontal layout */
-			.preview-left-buttons {
-				left: 50%;
 				top: 20px;
-				transform: translateX(-50%);
+				transform: none;
 				flex-direction: row;
 				flex-wrap: wrap;
-				justify-content: center;
+				justify-content: space-between;
 				gap: 8px;
-				max-width: 95vw;
+				padding: 0 10px;
+				max-width: 100vw;
 			}
 
 			.preview-tape-btn {
-				padding: 10px 16px;
-				font-size: 0.8rem;
+				padding: 8px 12px;
+				font-size: 0.75rem;
 				min-width: auto;
-				flex: 0 1 auto;
+				flex: 0 1 calc(50% - 12px);
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			/* First two buttons align left, last two align right */
+			.preview-tape-btn:nth-child(1),
+			.preview-tape-btn:nth-child(2) {
+				margin-right: auto;
+			}
+
+			.preview-tape-btn:nth-child(3),
+			.preview-tape-btn:nth-child(4) {
+				margin-left: auto;
 			}
 
 			.preview-tape-btn:hover {
@@ -1451,6 +1555,134 @@
 			.preview-exit-btn:hover {
 				background: rgba(220, 38, 38, 0.95) !important;
 				transform: translateY(-2px);
+			}
+
+			/* Phone: Scale down PEEL button for narrow screens */
+			.peel-btn {
+				bottom: 20px;
+				right: 15px;
+				padding: 10px 16px;
+				font-size: 0.9rem;
+				min-width: 80px;
+			}
+
+			.peel-hint {
+				bottom: 60px;
+				right: 15px;
+				font-size: 0.7rem;
+				max-width: 180px;
+				padding: 6px 10px;
+			}
+
+			/* Phone: Scale down images to fit within screen bounds */
+			.playground-sticker {
+				width: 280px;
+				max-width: 70%;
+				padding: 10px;
+			}
+
+			.preview-surface-image {
+				width: 120px;
+				height: 180px;
+				transform: translate(calc(-50% + 80px), -50%);
+			}
+
+			.preview-tape-image {
+				width: 100px;
+				height: 100px;
+				transform: translateX(calc(-50% - 80px));
+			}
+
+			.preview-tape-image.tape1 {
+				top: calc(50% - 100px);
+			}
+
+			.preview-tape-image.tape2 {
+				top: calc(50% + 10px);
+			}
+
+			.preview-regular-tape-image {
+				width: 100px;
+				height: 100px;
+				transform: translate(calc(-50% - 80px), -50%);
+			}
+
+			.preview-sticker-variant {
+				width: 80px;
+				transform: translate(-50%, -50%) translateX(-300px);
+			}
+
+			.preview-sticker-variant.visible {
+				transform: translate(-50%, -50%) translateX(10px);
+			}
+
+			.material-popup {
+				width: 90%;
+				max-width: none;
+				height: 60vh;
+				max-height: 500px;
+				bottom: calc(100px + 20px);
+				left: 5% !important;
+				right: 5% !important;
+			}
+
+			.material-popup.left,
+			.material-popup.right {
+				left: 5% !important;
+				right: auto !important;
+			}
+
+			.popup-inner-content {
+				padding: 12px;
+			}
+
+			.popup-frame {
+				padding: 12px;
+			}
+
+			.popup-title {
+				font-size: 0.95rem;
+				margin: 0 0 10px 0;
+			}
+
+			.mixing-header {
+				font-size: 0.65rem;
+				margin: 0 0 8px 0;
+				padding-bottom: 6px;
+			}
+
+			.tape-columns-container {
+				gap: 8px;
+			}
+
+			.material-pills {
+				gap: 6px;
+				padding: 2px;
+			}
+
+			.material-pill {
+				padding: 10px 14px;
+				font-size: 0.85rem;
+				border-radius: 8px;
+			}
+
+			.material-grid {
+				grid-template-columns: repeat(3, 1fr);
+				gap: 10px;
+			}
+
+			.material-tile {
+				width: 70px;
+				height: 50px;
+				border-width: 3px;
+			}
+
+			.material-tile.selected {
+				border-width: 4px;
+			}
+
+			.material-tile-label {
+				font-size: 0.7rem;
 			}
 
 			.form-grid {
