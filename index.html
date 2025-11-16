@@ -4,6 +4,12 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="description" content="Tape Testing UI - Responsive demo with sidebar, playground, and controls" />
+	<!-- Content Security Policy -->
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
+	<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+	<meta http-equiv="X-Frame-Options" content="DENY" />
+	<meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+	<meta name="referrer" content="no-referrer" />
 	<title>TapeTesting</title>
 	<!-- Link CSS files for responsive layouts -->
 	<link rel="stylesheet" href="./display and css/desktop.css" />
@@ -1413,6 +1419,40 @@
 				padding: 16px 12px;
 			}
 
+			/* Phone: Move preview buttons to top horizontal layout */
+			.preview-left-buttons {
+				left: 50%;
+				top: 20px;
+				transform: translateX(-50%);
+				flex-direction: row;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 8px;
+				max-width: 95vw;
+			}
+
+			.preview-tape-btn {
+				padding: 10px 16px;
+				font-size: 0.8rem;
+				min-width: auto;
+				flex: 0 1 auto;
+			}
+
+			.preview-tape-btn:hover {
+				transform: translateY(-2px);
+			}
+
+			/* Exit preview button red styling for phone */
+			.preview-exit-btn {
+				background: rgba(220, 38, 38, 0.85) !important;
+				border-color: rgba(255, 255, 255, 0.3) !important;
+			}
+
+			.preview-exit-btn:hover {
+				background: rgba(220, 38, 38, 0.95) !important;
+				transform: translateY(-2px);
+			}
+
 			.form-grid {
 				grid-template-columns: 1fr;
 			}
@@ -1585,6 +1625,7 @@
 		<button class="preview-tape-btn" id="variantTapeBtn">Variant Tape</button>
 		<button class="preview-tape-btn" id="regularTapeBtn">Regular Tape</button>
 		<button class="preview-tape-btn" id="previewSurfaceBtn">Surface Selection</button>
+		<button class="preview-tape-btn preview-exit-btn" id="exitPreviewBtn">Exit Preview</button>
 	</div>
 
 	<!-- PEEL button - bottom right in preview mode -->
@@ -1636,6 +1677,86 @@
 	</script>
 
 	<script>
+		// ==================== SECURITY FUNCTIONS ====================
+		
+		/**
+		 * Sanitize HTML to prevent XSS attacks
+		 * Escapes special characters that could be used for injection
+		 */
+		function sanitizeHTML(str) {
+			if (typeof str !== 'string') return str;
+			const div = document.createElement('div');
+			div.textContent = str;
+			return div.innerHTML;
+		}
+		
+		/**
+		 * Validate and sanitize numeric input
+		 * Returns safe number within specified range
+		 */
+		function sanitizeNumber(value, min = -Infinity, max = Infinity, defaultValue = 0) {
+			const num = Number(value);
+			if (isNaN(num) || !isFinite(num)) return defaultValue;
+			return Math.max(min, Math.min(max, num));
+		}
+		
+		/**
+		 * Validate string input against whitelist
+		 * Returns value if valid, default otherwise
+		 */
+		function validateString(value, allowedValues, defaultValue) {
+			if (typeof value !== 'string') return defaultValue;
+			return allowedValues.includes(value) ? value : defaultValue;
+		}
+		
+		/**
+		 * Validate and sanitize localStorage data
+		 * Checks structure and sanitizes all values
+		 */
+		function validateStateData(data) {
+			if (!data || typeof data !== 'object') return null;
+			
+			// Validate params object
+			if (data.params && typeof data.params === 'object') {
+				data.params.width = sanitizeNumber(data.params.width, 1, 10000, 100);
+				data.params.height = sanitizeNumber(data.params.height, 1, 10000, 80);
+				data.params.thickness = sanitizeNumber(data.params.thickness, 1, 1000, 120);
+				data.params.temperature = sanitizeNumber(data.params.temperature, -100, 200, 23);
+				data.params.humidity = sanitizeNumber(data.params.humidity, 0, 100, 50);
+				data.params.tapeLength = sanitizeNumber(data.params.tapeLength, 10, 100000, 1000);
+			}
+			
+			// Validate arrays
+			if (Array.isArray(data.history)) {
+				data.history = data.history.slice(0, 1000); // Limit history size
+			}
+			if (Array.isArray(data.experiments)) {
+				data.experiments = data.experiments.slice(0, 100); // Limit experiments
+			}
+			
+			// Validate timeImpactDays
+			if (typeof data.timeImpactDays === 'number') {
+				data.timeImpactDays = sanitizeNumber(data.timeImpactDays, 0, 366, 0);
+			}
+			
+			return data;
+		}
+		
+		/**
+		 * Safe JSON parse with error handling
+		 */
+		function safeJSONParse(str, defaultValue = null) {
+			try {
+				const parsed = JSON.parse(str);
+				return validateStateData(parsed) || defaultValue;
+			} catch (e) {
+				console.warn('JSON parse failed:', e);
+				return defaultValue;
+			}
+		}
+		
+		// ==================== END SECURITY FUNCTIONS ====================
+		
 		// UI State
 		const state = {
 			activePanel: 'dimensions',
@@ -1654,25 +1775,52 @@
 
 		// Load from localStorage
 		function loadState() {
-			const saved = localStorage.getItem('tape_ui_params');
-			if (saved) state.params = JSON.parse(saved);
-			const savedHistory = localStorage.getItem('tape_ui_history');
-			if (savedHistory) state.history = JSON.parse(savedHistory);
-			const savedExperiments = localStorage.getItem('tape_ui_experiments');
-			if (savedExperiments) state.experiments = JSON.parse(savedExperiments);
+			try {
+				const saved = localStorage.getItem('tape_ui_params');
+				if (saved) {
+					const parsed = safeJSONParse(saved);
+					if (parsed && parsed.params) state.params = parsed.params;
+				}
+				const savedHistory = localStorage.getItem('tape_ui_history');
+				if (savedHistory) {
+					const parsed = safeJSONParse(savedHistory);
+					if (Array.isArray(parsed)) {
+						state.history = parsed.slice(0, 1000).map(entry => ({
+							time: sanitizeHTML(entry.time || ''),
+							text: sanitizeHTML(entry.text || '')
+						}));
+					}
+				}
+				const savedExperiments = localStorage.getItem('tape_ui_experiments');
+				if (savedExperiments) {
+					const parsed = safeJSONParse(savedExperiments);
+					if (Array.isArray(parsed)) {
+						state.experiments = parsed.slice(0, 100);
+					}
+				}
+			} catch (e) {
+				console.warn('Failed to load state:', e);
+				// Reset to defaults on error
+				state.params = { width: 100, height: 80, tape: 'PVC', surface: 'Steel', temperature: 23, humidity: 50, thickness: 120, adhesive: 'Acrylic', environment: 'Dry', tapeLength: 1000 };
+			}
 		}
 
 		// Save to localStorage
 		function saveState() {
-			localStorage.setItem('tape_ui_params', JSON.stringify(state.params));
-			localStorage.setItem('tape_ui_history', JSON.stringify(state.history));
-			localStorage.setItem('tape_ui_experiments', JSON.stringify(state.experiments));
+			try {
+				localStorage.setItem('tape_ui_params', JSON.stringify(state.params));
+				localStorage.setItem('tape_ui_history', JSON.stringify(state.history.slice(0, 50)));
+				localStorage.setItem('tape_ui_experiments', JSON.stringify(state.experiments.slice(0, 100)));
+			} catch (e) {
+				console.warn('Failed to save state:', e);
+			}
 		}
 
 		// Add history entry
 		function addHistory(entry) {
 			const time = new Date().toLocaleString();
-			state.history.unshift({ time, text: entry });
+			const sanitizedEntry = sanitizeHTML(String(entry));
+			state.history.unshift({ time, text: sanitizedEntry });
 			state.history = state.history.slice(0, 50);
 			saveState();
 		}
@@ -1753,18 +1901,24 @@
 					</div>
 				`;
 				document.getElementById('widthInput').addEventListener('change', (e) => {
-					state.params.width = Number(e.target.value);
-					addHistory(`Width set to ${e.target.value}`);
+					const sanitized = sanitizeNumber(e.target.value, 1, 10000, 100);
+					state.params.width = sanitized;
+					e.target.value = sanitized;
+					addHistory(`Width set to ${sanitized}`);
 					renderContent();
 				});
 				document.getElementById('heightInput').addEventListener('change', (e) => {
-					state.params.height = Number(e.target.value);
-					addHistory(`Height set to ${e.target.value}`);
+					const sanitized = sanitizeNumber(e.target.value, 1, 10000, 80);
+					state.params.height = sanitized;
+					e.target.value = sanitized;
+					addHistory(`Height set to ${sanitized}`);
 					renderContent();
 				});
 				document.getElementById('tapeLengthInput').addEventListener('change', (e) => {
-					state.params.tapeLength = Number(e.target.value);
-					addHistory(`Tape length set to ${e.target.value}mm`);
+					const sanitized = sanitizeNumber(e.target.value, 10, 100000, 1000);
+					state.params.tapeLength = sanitized;
+					e.target.value = sanitized;
+					addHistory(`Tape length set to ${sanitized}mm`);
 					renderContent();
 				});
 				break;			case 'specifics':
@@ -1954,13 +2108,16 @@
 				const adhesiveSelect = document.getElementById('adhesiveSelect');
 				
 				thicknessInput.addEventListener('change', (e) => {
-					state.params.thickness = parseInt(e.target.value) || 120;
+					const sanitized = sanitizeNumber(e.target.value, 1, 1000, 120);
+					state.params.thickness = sanitized;
+					e.target.value = sanitized;
 					saveState();
 					renderContent('specifics');
 				});
 				
 				adhesiveSelect.addEventListener('change', (e) => {
-					state.params.adhesive = e.target.value;
+					const allowedAdhesives = ['Acrylic', 'Rubber', 'Silicone'];
+					state.params.adhesive = validateString(e.target.value, allowedAdhesives, 'Acrylic');
 					saveState();
 					renderContent('specifics');
 if (state.previewMode) updateTapeYellowTint();
@@ -2912,11 +3069,18 @@ if (state.previewMode) updateTapeYellowTint();
 					openSurfacePopup();
 					closeTapePopup(); // Close tape popup if open
 				}
-			addHistory('Opened surface selection in preview mode');
-		}
-	});
+		addHistory('Opened surface selection in preview mode');
+	}
+});
 
-	// PEEL button - assess damage when peeling tape from surface
+// Exit preview button - returns to main screen (for phone users)
+document.getElementById('exitPreviewBtn').addEventListener('click', () => {
+	if (state.previewMode) {
+		// Click the preview button to exit preview mode
+		document.getElementById('previewBtn').click();
+		addHistory('Exited preview mode via exit button');
+	}
+});	// PEEL button - assess damage when peeling tape from surface
 	let peelInProgress = false;
 	document.getElementById('peelBtn').addEventListener('click', () => {
 		console.log('🔴 PEEL button clicked');
@@ -3436,14 +3600,12 @@ if (state.previewMode) updateTapeYellowTint();
 
 			console.log('Initializing slider...', slider, valueDisplay);
 
-			// Update display and state when slider changes
-			slider.addEventListener('input', (e) => {
-				const value = parseInt(e.target.value);
-				console.log('Slider input:', value);
-				valueDisplay.textContent = value;
-				state.timeImpactDays = value;
-				
-				// Debug: Check tape button state BEFORE slider operations
+		// Update display and state when slider changes
+		slider.addEventListener('input', (e) => {
+			const value = sanitizeNumber(e.target.value, 0, 366, 0);
+			console.log('Slider input:', value);
+			valueDisplay.textContent = value;
+			state.timeImpactDays = value;				// Debug: Check tape button state BEFORE slider operations
 				const variantBtn = document.getElementById('variantTapeBtn');
 				const regularBtn = document.getElementById('regularTapeBtn');
 				console.log('🔍 Tape button state BEFORE slider operations:', {

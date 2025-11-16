@@ -2,6 +2,10 @@
  * Tape Testing Calculations
  * Based on collected data on pressure-sensitive adhesive (PSA) tapes
  * 
+ * SECURITY: This module contains only pure calculation functions and constant data structures.
+ * All user inputs are validated in index.html before being passed to these functions.
+ * No eval(), innerHTML, or dynamic code execution is used.
+ * 
  * References:
  * - 3M Scotch 508: 25µm BOPP backing + 15µm acrylic = 40µm total, 260 cN/cm adhesion
  * - 3M Scotch 373: 41µm PP backing + 23µm rubber = 64µm total, 54.7 N/100mm adhesion
