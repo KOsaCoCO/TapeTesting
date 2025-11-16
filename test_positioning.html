@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { background: #333; margin: 0; padding: 0; height: 100vh; }
+.preview-slider-container {
+    position: fixed;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 400px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 24px 20px;
+    border-radius: 12px;
+    z-index: 41;
+    color: white;
+}
+.peel-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(220, 38, 38, 0.9);
+    color: #fff;
+    padding: 20px 40px;
+    border-radius: 16px;
+    z-index: 50;
+    font-size: 1.2rem;
+}
+</style>
+</head>
+<body>
+<div class="preview-slider-container">TIME SLIDER<br>400px height<br>Centered vertically</div>
+<button class="peel-btn">PEEL</button>
+<div style="color: white; position: fixed; top: 20px; left: 20px;">
+Visual positioning test - Both elements visible
+</div>
+</body>
+</html>

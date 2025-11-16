@@ -235,9 +235,101 @@ export const SURFACE_MATERIALS = {
 		surfaceEnergy: 'medium',
 		texture: 'smooth',
 		adhesionMultiplier: 0.75,
-		description: 'Requires acid-free/archival tape. Standard tapes may damage image.'
+		description: 'Requires acid-free/archival tape. Standard tapes may damage image.',
+		ruptureStrength: { min: 50, max: 400, typical: 225 } // N/cm
 	}
 };
+
+/**
+ * Surface rupture strength database
+ * Force required to tear/rupture a 1 cm wide strip of material (N/cm)
+ * Based on force_applie_toRip guide
+ */
+export const SURFACE_RUPTURE_STRENGTH = {
+	'Paper Note': { min: 3.5, max: 4.5, typical: 4.0 }, // Office paper 80 gsm
+	'Manga Paper': { min: 3, max: 20, typical: 11.5 }, // Varies 80-135 gsm
+	'Sketchbook Paper': { min: 12, max: 60, typical: 36 }, // Heavy art paper 150-200 gsm
+	'Photo': { min: 50, max: 400, typical: 225 }, // RC photo paper
+	'Rough Carton': { min: 40, max: 240, typical: 140 }, // Cardboard/testliner
+	'Door Veneer': { min: 200, max: 700, typical: 450 }, // Wood veneer 0.5-0.6mm
+	'Wall Paint': { min: 5, max: 150, typical: 77.5 }, // Well-bonded paint (1cm × 1mm strip)
+	'Damaged Wall Paint': { min: 0.5, max: 10, typical: 5.25 }, // Poor adhesion paint
+	// Surfaces not in guide (too strong to damage with tape)
+	'Steel': null, // Several thousand N/cm - tape will always fail first
+	'Aluminum': null, // Several thousand N/cm
+	'Glass': null, // Several thousand N/cm
+	'Textured Glass': null, // Several thousand N/cm
+	'Plastic Bag': null, // ~50-100 N/cm but tape won't bond well enough to rip it
+	'Textured / Thick Photo': { min: 40, max: 240, typical: 140 } // Similar to carton
+};
+
+/**
+ * Calculate surface damage risk
+ * Compares tape hold strength against surface rupture strength
+ * 
+ * @param {Object} params - Calculation parameters
+ * @returns {Object} Damage assessment
+ */
+export function calculateSurfaceDamageRisk(params) {
+	const {
+		surface,
+		width = 10, // mm (default 1 cm)
+		height = 10 // mm
+	} = params;
+	
+	// Get tape hold strength (N/cm²)
+	const holdStrength = calculateHoldStrength(params);
+	
+	// Convert to force per cm width: holdStrength [N/cm²] × width [cm] × height [cm] / width [cm] = N/cm
+	// For pulling force, we consider the contact area
+	const contactArea = (width / 10) * (height / 10); // cm²
+	const tapeForce = holdStrength * (width / 10); // Force per cm width (N/cm)
+	
+	// Get surface rupture data
+	const ruptureData = SURFACE_RUPTURE_STRENGTH[surface];
+	
+	if (!ruptureData) {
+		// Surface is too strong to damage
+		return {
+			canDamage: false,
+			safetyFactor: 'infinite',
+			damageRisk: 'none',
+			message: 'Tape is not strong enough to damage this surface. The tape bond will fail before the surface tears.',
+			tapeForce: tapeForce,
+			surfaceStrength: null
+		};
+	}
+	
+	// Compare tape force to surface rupture strength
+	const surfaceStrength = ruptureData.typical;
+	const safetyFactor = surfaceStrength / tapeForce;
+	
+	let damageRisk, message;
+	
+	if (safetyFactor > 3) {
+		damageRisk = 'low';
+		message = `Low risk of surface damage. Surface is ${safetyFactor.toFixed(1)}× stronger than tape bond.`;
+	} else if (safetyFactor > 1.5) {
+		damageRisk = 'moderate';
+		message = `Moderate risk. Surface strength (${surfaceStrength.toFixed(1)} N/cm) is only ${safetyFactor.toFixed(1)}× tape force (${tapeForce.toFixed(2)} N/cm). Handle carefully.`;
+	} else if (safetyFactor > 1) {
+		damageRisk = 'high';
+		message = `High risk of damage! Surface strength (${surfaceStrength.toFixed(1)} N/cm) barely exceeds tape force (${tapeForce.toFixed(2)} N/cm). May tear on removal.`;
+	} else {
+		damageRisk = 'critical';
+		message = `CRITICAL: Tape force (${tapeForce.toFixed(2)} N/cm) exceeds surface strength (${surfaceStrength.toFixed(1)} N/cm)! Surface will likely tear.`;
+	}
+	
+	return {
+		canDamage: true,
+		safetyFactor: safetyFactor,
+		damageRisk: damageRisk,
+		message: message,
+		tapeForce: tapeForce,
+		surfaceStrength: surfaceStrength,
+		surfaceRange: ruptureData
+	};
+}
 
 /**
  * Environmental condition data
@@ -355,7 +447,13 @@ export function calculatePeelAdhesion(params) {
 		lowEnergyPenalty = 0.8; // rubber better but still reduced
 	}
 	
-	const finalAdhesion = baseAdhesion * surfaceMultiplier * envMultiplier * thicknessFactor * lowEnergyPenalty;
+	let finalAdhesion = baseAdhesion * surfaceMultiplier * envMultiplier * thicknessFactor * lowEnergyPenalty;
+	
+	// Apply aging effects if time impact is specified
+	if (params.timeImpactDays && params.timeImpactDays > 0) {
+		const aging = calculateAgingEffects(params);
+		finalAdhesion *= aging.peelRetention;
+	}
 	
 	return Math.max(0.1, finalAdhesion); // minimum 0.1 N/cm
 }
@@ -636,5 +734,174 @@ export function calculateMixedTapeProperties(params) {
 		stretch: avgStretch.toFixed(1),
 		totalThickness: Math.round(totalThickness),
 		description: `Composite of ${tape1} and ${tape2}`
+	};
+}
+
+/**
+ * Calculate UV degradation yellow tint intensity
+ * Returns a value from 0 (no yellowing) to 1 (maximum yellowing)
+ * Based on:
+ * - Time exposure (0-366 days)
+ * - Backing material UV resistance
+ * - Adhesive UV resistance
+ * - Environmental UV exposure
+ * 
+ * @param {Object} params - Calculation parameters
+ * @returns {number} Yellow tint intensity (0-1)
+ */
+export function calculateUVDegradation(params) {
+	const {
+		backing,
+		adhesive,
+		environment,
+		timeImpactDays = 0
+	} = params;
+	
+	if (timeImpactDays === 0) return 0;
+	
+	// Get material data
+	const backingData = BACKING_MATERIALS[backing];
+	const adhesiveData = ADHESIVE_TYPES[adhesive];
+	const envData = ENVIRONMENTAL_CONDITIONS[environment] || ENVIRONMENTAL_CONDITIONS['Dry'];
+	
+	if (!backingData || !adhesiveData) return 0;
+	
+	// UV resistance mapping to degradation rate
+	const uvResistanceToRate = {
+		'excellent': 0.05,  // Very slow yellowing (Acrylic, PET, Silicone)
+		'good': 0.15,       // Moderate yellowing (BOPP, PP, Cloth)
+		'fair': 0.35,       // Noticeable yellowing (Paper, Foam)
+		'poor': 0.65        // Rapid yellowing (PVC, Rubber adhesive)
+	};
+	
+	// Get degradation rates
+	const backingRate = uvResistanceToRate[backingData.uvResistance] || 0.3;
+	const adhesiveRate = uvResistanceToRate[adhesiveData.uvResistance] || 0.3;
+	
+	// Environment UV exposure multiplier
+	// Tropical/Arid = high UV, Humid/Dry = moderate, Semiarid = high
+	const envUVMultiplier = {
+		'Tropical': 1.5,    // Equatorial high UV
+		'Arid': 1.4,        // Desert high UV
+		'Semiarid': 1.2,    // Mediterranean moderate-high
+		'Dry': 1.0,         // Indoor/temperate
+		'Humid': 0.9        // Often cloudy, less direct sun
+	};
+	const uvMultiplier = envUVMultiplier[environment] || 1.0;
+	
+	// Combined degradation rate (adhesive yellowing is usually more visible)
+	const combinedRate = (backingRate * 0.4 + adhesiveRate * 0.6) * uvMultiplier;
+	
+	// Time-based yellowing curve (logarithmic - fast at first, then slows)
+	// At 366 days with high degradation rate, reaches ~0.9
+	const timeFactorDays = timeImpactDays / 366; // Normalize to 0-1
+	const yellowIntensity = Math.min(1.0, combinedRate * (0.3 + 0.7 * Math.log10(1 + timeFactorDays * 9)));
+	
+	return yellowIntensity;
+}
+
+/**
+ * Calculate adhesive residue yellow tint intensity
+ * Returns a value from 0 (no residue) to 1 (heavy residue staining)
+ * Based on:
+ * - Time exposure allowing adhesive migration
+ * - Adhesive type (rubber bleeds more than acrylic)
+ * - Surface porosity
+ * - Temperature (heat accelerates migration)
+ * 
+ * @param {Object} params - Calculation parameters
+ * @returns {number} Residue tint intensity (0-1)
+ */
+export function calculateAdhesiveResidue(params) {
+	const {
+		adhesive,
+		surface,
+		environment,
+		timeImpactDays = 0
+	} = params;
+	
+	if (timeImpactDays === 0) return 0;
+	
+	// Get material data
+	const adhesiveData = ADHESIVE_TYPES[adhesive];
+	const surfaceData = SURFACE_MATERIALS[surface];
+	const envData = ENVIRONMENTAL_CONDITIONS[environment] || ENVIRONMENTAL_CONDITIONS['Dry'];
+	
+	if (!adhesiveData || !surfaceData) return 0;
+	
+	// Adhesive residue propensity
+	// Rubber > Acrylic > Silicone (silicone leaves minimal residue)
+	const adhesiveResidueFactor = {
+		'Acrylic': 0.3,   // Clean removal on most surfaces
+		'Rubber': 0.8,    // Known for leaving sticky residue
+		'Silicone': 0.1   // Minimal transfer
+	};
+	const residueFactor = adhesiveResidueFactor[adhesive] || 0.4;
+	
+	// Surface porosity factor
+	// Porous surfaces absorb adhesive, non-porous can be cleaned
+	const surfaceAbsorptionFactor = {
+		'Steel': 0.1,
+		'Aluminum': 0.1,
+		'Glass': 0.05,
+		'Textured Glass': 0.3,
+		'Plastic Bag': 0.2,
+		'Door Veneer': 0.7,      // Porous wood
+		'Paper Note': 0.9,       // Very absorbent
+		'Manga Paper': 0.9,
+		'Sketchbook Paper': 0.85,
+		'Rough Carton': 0.8,
+		'Wall Paint': 0.6,       // Paint can absorb some
+		'Damaged Wall Paint': 0.7,
+		'Photo': 0.5
+	};
+	const absorptionFactor = surfaceAbsorptionFactor[surface] || 0.4;
+	
+	// Temperature accelerates adhesive flow/migration
+	const tempFactor = Math.max(0.5, Math.min(2.0, envData.temperature.typical / 20));
+	
+	// Time-based residue accumulation (square root curve - slow buildup)
+	const timeFactorDays = Math.sqrt(timeImpactDays / 366); // 0-1, slower growth
+	
+	// Combined residue intensity
+	const residueIntensity = Math.min(1.0, 
+		residueFactor * absorptionFactor * tempFactor * timeFactorDays * 1.2
+	);
+	
+	return residueIntensity;
+}
+
+/**
+ * Calculate total yellow tint for tape visualization
+ * Combines UV degradation and adhesive residue effects
+ * 
+ * @param {Object} params - Calculation parameters
+ * @returns {Object} Tint information with intensity and RGB values
+ */
+export function calculateTapeYellowTint(params) {
+	const uvDegradation = calculateUVDegradation(params);
+	const adhesiveResidue = calculateAdhesiveResidue(params);
+	
+	// Combined effect (not purely additive - use max with weighted blend)
+	const combinedIntensity = Math.min(1.0, 
+		Math.max(uvDegradation, adhesiveResidue) * 0.7 + 
+		(uvDegradation + adhesiveResidue) * 0.3
+	);
+	
+	// Convert intensity to yellow overlay color
+	// At 0: transparent, At 1: strong yellow (rgba(255, 200, 0, 0.6))
+	const alpha = combinedIntensity * 0.6; // Max 60% opacity
+	const rgb = {
+		r: 255,
+		g: Math.round(200 - combinedIntensity * 50), // Darkens slightly
+		b: 0
+	};
+	
+	return {
+		intensity: combinedIntensity,
+		uvComponent: uvDegradation,
+		residueComponent: adhesiveResidue,
+		color: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha.toFixed(3)})`,
+		cssFilter: `sepia(${(combinedIntensity * 0.8).toFixed(2)}) saturate(${(1 + combinedIntensity * 2).toFixed(2)}) hue-rotate(${(combinedIntensity * 15).toFixed(0)}deg) brightness(${(1 - combinedIntensity * 0.2).toFixed(2)})`
 	};
 }
