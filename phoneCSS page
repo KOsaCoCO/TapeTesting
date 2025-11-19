@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tape Test — Mobile UI Replica</title>
+<style>
+  :root{
+    --outline:#11439a;
+    --outline-2:#0e3a86;
+    --paper:#fbfbf6;
+    --green:#e6f8c9;
+    --accent:#113f9a;
+    --shadow: rgba(17,63,154,0.12);
+    --radius:10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;margin:0;background:var(--paper);-webkit-text-size-adjust:100%;}
+  /* Phone frame */
+  .phone {
+    width:380px;          /* mobile width for preview */
+    max-width:96%;
+    height:810px;
+    margin:18px auto;
+    border:7px solid var(--outline);
+    border-radius:16px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    background:var(--paper);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* Top nav / header (green small bar + nav row) */
+  .top {
+    padding:8px;
+    box-sizing:border-box;
+  }
+
+  .info-bar {
+    background:var(--green);
+    border:5px solid var(--outline-2);
+    border-radius:8px;
+    padding:8px 12px;
+    font-weight:700;
+    color:#123147;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .nav-row {
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .nav-icon {
+    flex:0 0 28%;
+    min-height:56px;
+    border:5px solid var(--outline-2);
+    border-radius:8px;
+    background:#e9eef9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+  }
+  .nav-title {
+    flex:1;
+    border:5px solid var(--outline-2);
+    border-radius:8px;
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+    font-weight:700;
+    color:#123147;
+    cursor:pointer;
+    background:transparent;
+  }
+
+  /* Slider row under the top section with "What is this? ->" link beside it */
+  .slider-row {
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 0;
+  }
+  .what-link {
+    flex:0 0 36%;
+    border:5px solid var(--outline-2);
+    background:var(--green);
+    border-radius:8px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .slider-wrap {
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .slider {
+    -webkit-appearance:none;
+    appearance:none;
+    height:6px;
+    background:#dbe8ff;
+    border-radius:6px;
+    width:100%;
+  }
+  .slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--outline-2);
+    border:4px solid #fff;
+    box-shadow:0 4px 12px var(--shadow);
+    cursor:pointer;
+  }
+  .slider-value {
+    width:56px;
+    border:4px solid var(--outline-2);
+    border-radius:8px;
+    text-align:center;
+    padding:6px 8px;
+    font-weight:700;
+    background:transparent;
+  }
+
+  /* Main playground / content area */
+  .content {
+    flex:1;
+    margin:12px;
+    border:6px solid var(--outline-2);
+    border-radius:12px;
+    background: var(--paper);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .playground {
+    font-size:48px;
+    font-weight:800;
+    color:var(--outline-2);
+    text-align:center;
+    user-select:none;
+    font-family: "Segoe Script", "Brush Script MT", system-ui;
+  }
+
+  /* vertical right slider mimic (thin rail) – decorative but functional */
+  .v-slider-rail {
+    position:absolute;
+    right:8px;
+    top:60px;
+    bottom:120px;
+    width:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none; /* decorative */
+  }
+  .rail {
+    width:8px;
+    height:70%;
+    background:#eef3ff;
+    border-radius:8px;
+    border:2px solid rgba(11,99,214,0.08);
+    position:relative;
+  }
+  .rail .thumb {
+    width:8px;height:28px;border-radius:6px;background:var(--outline-2);
+    position:absolute;left:0; top:55%;
+    transform:translateY(-50%);
+  }
+
+  /* Bottom TEST bar */
+  .test-bar {
+    height:90px;
+    border-top:6px solid var(--outline-2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px;
+    box-sizing:border-box;
+    background:transparent;
+  }
+  .test-btn {
+    width:92%;
+    height:64px;
+    background:var(--outline-2);
+    color:white;
+    border-radius:10px;
+    border:6px solid var(--outline-2);
+    font-size:28px;
+    font-weight:900;
+    box-shadow:0 8px 30px var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  /* Experiment Station screen (overlay / alternative view) */
+  .station {
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background:transparent;
+    display:flex;
+    flex-direction:column;
+    padding:18px;
+    box-sizing:border-box;
+    gap:12px;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(8px) scale(.997);
+    transition: all .22s cubic-bezier(.2,.85,.2,1);
+  }
+  .station.show {
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0) scale(1);
+  }
+
+  .station-grid {
+    margin-top:8px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    align-content:start;
+    justify-items:center;
+    padding-top:6px;
+  }
+  .opt-btn {
+    width:86%;
+    border:6px solid var(--outline-2);
+    border-radius:10px;
+    padding:10px;
+    text-align:left;
+    font-weight:800;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-sizing:border-box;
+    cursor:pointer;
+  }
+  .opt-num {
+    min-width:42px;
+    min-height:42px;
+    border:6px solid var(--outline-2);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+  }
+
+  .station-center {
+    margin-top:30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  .wide-btn {
+    width:60%;
+    border:6px solid var(--outline-2);
+    border-radius:10px;
+    padding:12px 20px;
+    text-align:center;
+    font-weight:900;
+    background:transparent;
+    cursor:pointer;
+  }
+
+  /* Info modal (shared) */
+  .modal-backdrop {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:60;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .16s;
+  }
+  .modal-backdrop.show { opacity:1; pointer-events:auto; }
+  .modal {
+    width:86%;
+    max-width:420px;
+    background:white;
+    border:6px solid var(--outline-2);
+    border-radius:12px;
+    padding:14px;
+    box-sizing:border-box;
+  }
+  .modal h3 { margin:0 0 8px 0; font-size:16px; }
+  .modal p { margin:0; font-size:14px; color:#214055; }
+
+  /* small responsive tweak */
+  @media (max-width:420px){
+    .phone{width:360px;height:820px;}
+    .playground{font-size:40px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" role="application" aria-label="Mobile tape test UI">
+  <!-- Top -->
+  <div class="top">
+    <div id="infoTop" class="info-bar" role="button" aria-haspopup="dialog" tabindex="0">Click me for info</div>
+
+    <div class="nav-row">
+      <div class="nav-icon" id="menuIcon" title="menu icon">
+        <!-- three lines icon -->
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 7h16" stroke="#123147" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M4 12h16" stroke="#123147" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M4 17h12" stroke="#123147" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="expTile" class="nav-title" role="button">Experiment Station</div>
+    </div>
+
+    <div class="slider-row">
+      <div id="whatLink" class="what-link" role="button" tabindex="0">What is this? →</div>
+
+      <div class="slider-wrap">
+        <input id="timeSlider" class="slider" type="range" min="0" max="366" value="60" aria-label="Exposure days slider" />
+        <div id="timeVal" class="slider-value" aria-live="polite">60d</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content" id="content">
+    <div class="playground">PLAYGROUND</div>
+
+    <!-- vertical rail (decorative) -->
+    <div class="v-slider-rail" aria-hidden="true">
+      <div class="rail"><div class="thumb"></div></div>
+    </div>
+
+    <!-- Experiment Station overlay (initially hidden) -->
+    <div id="station" class="station" aria-hidden="true">
+      <!-- top row (repeat small nav inside for continuity) -->
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="nav-icon" style="flex:0 0 28%; min-height:48px;"></div>
+        <div class="nav-title" style="height:48px; display:flex; align-items:center; justify-content:center;">Experiment Station</div>
+      </div>
+
+      <div class="station-grid" role="list">
+        <button class="opt-btn" data-id="1" role="listitem"><div class="opt-num">1</div><div>Tape Select</div></button>
+        <button class="opt-btn" data-id="3" role="listitem"><div class="opt-num">3</div><div>Weather</div></button>
+        <button class="opt-btn" data-id="2" role="listitem"><div class="opt-num">2</div><div>Testing Surface</div></button>
+        <button class="opt-btn" data-id="4" role="listitem"><div class="opt-num">4</div><div>Specifics</div></button>
+      </div>
+
+      <div class="station-center">
+        <button class="wide-btn" id="saveBtn">5 Save</button>
+        <button class="wide-btn" id="historyBtn">History Log</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- bottom TEST bar -->
+  <div class="test-bar">
+    <button id="testBtn" class="test-btn" aria-pressed="false">TEST</button>
+  </div>
+</div>
+
+<!-- Shared info modal -->
+<div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" role="document">
+    <h3>Info / Help</h3>
+    <p>This demo replicates the mobile UI layout. Use the time slider to simulate exposure (0–366 days). Tap "Experiment Station" or the icon to switch to that screen. "What is this?" and the green header open this help window.</p>
+    <div style="height:12px;"></div>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button id="closeModal" style="border:4px solid var(--outline-2); padding:8px 12px; border-radius:8px; font-weight:700; background:transparent; cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Elements
+  const infoTop = document.getElementById('infoTop');
+  const whatLink = document.getElementById('whatLink');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const closeModal = document.getElementById('closeModal');
+  const expTile = document.getElementById('expTile');
+  const station = document.getElementById('station');
+  const timeSlider = document.getElementById('timeSlider');
+  const timeVal = document.getElementById('timeVal');
+  const testBtn = document.getElementById('testBtn');
+  const content = document.getElementById('content');
+
+  // Shared modal open/close
+  function openModal(){
+    modalBackdrop.classList.add('show');
+    modalBackdrop.setAttribute('aria-hidden','false');
+  }
+  function closeModalFn(){
+    modalBackdrop.classList.remove('show');
+    modalBackdrop.setAttribute('aria-hidden','true');
+  }
+  infoTop.addEventListener('click', openModal);
+  whatLink.addEventListener('click', openModal);
+  infoTop.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') openModal(); });
+  whatLink.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') openModal(); });
+  closeModal.addEventListener('click', closeModalFn);
+  modalBackdrop.addEventListener('click', (e)=>{ if(e.target === modalBackdrop) closeModalFn(); });
+
+  // Slider live update
+  function updateSliderVal(){
+    timeVal.textContent = timeSlider.value + 'd';
+    timeSlider.setAttribute('aria-valuenow', timeSlider.value);
+    // small visual effect: fade playground with exposure
+    const val = Number(timeSlider.value);
+    const fade = Math.min(0.65, val / 366 * 0.65);
+    content.style.filter = `grayscale(${fade}) contrast(${1 - fade*0.12})`;
+  }
+  timeSlider.addEventListener('input', updateSliderVal);
+  updateSliderVal();
+
+  // Show / hide experiment station (overlay)
+  let stationVisible = false;
+  function showStation(){
+    station.classList.add('show');
+    station.setAttribute('aria-hidden','false');
+    // optionally hide the slider row so the station overlays (per spec)
+    document.querySelector('.slider-row').style.opacity = 0;
+    document.querySelector('.slider-row').style.pointerEvents = 'none';
+    stationVisible = true;
+  }
+  function hideStation(){
+    station.classList.remove('show');
+    station.setAttribute('aria-hidden','true');
+    document.querySelector('.slider-row').style.opacity = 1;
+    document.querySelector('.slider-row').style.pointerEvents = '';
+    stationVisible = false;
+  }
+  expTile.addEventListener('click', ()=>{ showStation(); });
+  // Also open station if user taps the small nav-icon
+  document.getElementById('menuIcon').addEventListener('click', ()=>{ showStation(); });
+
+  // Allow close station by clicking outside area (content)
+  content.addEventListener('click', (e)=>{
+    // if station open and user taps empty content area outside station, close
+    if(stationVisible && !station.contains(e.target) && !expTile.contains(e.target)){
+      hideStation();
+    }
+  });
+
+  // test button visual behavior
+  testBtn.addEventListener('click', ()=>{
+    const pressed = testBtn.getAttribute('aria-pressed') === 'true';
+    testBtn.setAttribute('aria-pressed', String(!pressed));
+    testBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(.98)' }, { transform: 'scale(1)' }], { duration:180 });
+    // subtle feedback: if station open, flash one of the station buttons
+    if(stationVisible){
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.animate([{ transform:'translateY(0)' }, { transform:'translateY(-6px)' }, { transform:'translateY(0)' }], { duration:260 });
+    } else {
+      const pl = document.querySelector('.playground');
+      pl.animate([{ transform:'scale(1)' }, { transform:'scale(.995)' }, { transform:'scale(1)'}], { duration:200 });
+    }
+  });
+
+  // keyboard accessibility to close modal/escape
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){
+      if(modalBackdrop.classList.contains('show')) closeModalFn();
+      else if(stationVisible) hideStation();
+    }
+  });
+
+  // station option buttons: just show a small toast for demo
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      showToast('Selected: ' + btn.textContent.trim());
+    });
+  });
+  document.getElementById('historyBtn').addEventListener('click', ()=> showToast('Open History'));
+  document.getElementById('saveBtn').addEventListener('click', ()=> showToast('Parameters saved'));
+
+  // small toast helper
+  function showToast(text){
+    const t = document.createElement('div');
+    t.textContent = text;
+    Object.assign(t.style,{position:'fixed',left:'50%',transform:'translateX(-50%)',bottom:'22px',
+      background:'white',border:'4px solid var(--outline-2)',padding:'10px 12px',borderRadius:'8px',zIndex:80,fontWeight:800});
+    document.body.appendChild(t);
+    setTimeout(()=> t.animate([{opacity:1, transform:'translateX(-50%) translateY(0)'}, {opacity:0, transform:'translateX(-50%) translateY(10px)'}], {duration:900}), 1200);
+    setTimeout(()=> t.remove(), 1900);
+  }
+</script>
+</body>
+</html>

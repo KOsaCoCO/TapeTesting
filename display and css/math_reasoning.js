@@ -269,7 +269,7 @@ export const SURFACE_RUPTURE_STRENGTH = {
 
 /**
  * Calculate surface damage risk
- * Compares tape hold strength against surface rupture strength
+ * Compares tape peel force against surface rupture strength
  * 
  * @param {Object} params - Calculation parameters
  * @returns {Object} Damage assessment
@@ -281,13 +281,12 @@ export function calculateSurfaceDamageRisk(params) {
 		height = 10 // mm
 	} = params;
 	
-	// Get tape hold strength (N/cm²)
-	const holdStrength = calculateHoldStrength(params);
+	// Get tape peel adhesion (N/cm) - this is the force during removal
+	// Surface damage occurs during peeling, not static holding
+	const peelAdhesion = calculatePeelAdhesion(params);
 	
-	// Convert to force per cm width: holdStrength [N/cm²] × width [cm] × height [cm] / width [cm] = N/cm
-	// For pulling force, we consider the contact area
-	const contactArea = (width / 10) * (height / 10); // cm²
-	const tapeForce = holdStrength * (width / 10); // Force per cm width (N/cm)
+	// Peel adhesion is already in N/cm (force per unit width)
+	const tapeForce = peelAdhesion;
 	
 	// Get surface rupture data
 	const ruptureData = SURFACE_RUPTURE_STRENGTH[surface];
@@ -312,16 +311,16 @@ export function calculateSurfaceDamageRisk(params) {
 	
 	if (safetyFactor > 3) {
 		damageRisk = 'low';
-		message = `Low risk of surface damage. Surface is ${safetyFactor.toFixed(1)}× stronger than tape bond.`;
+		message = `Low risk of damage to ${surface}. Surface is ${safetyFactor.toFixed(1)}× stronger than tape bond.`;
 	} else if (safetyFactor > 1.5) {
 		damageRisk = 'moderate';
-		message = `Moderate risk. Surface strength (${surfaceStrength.toFixed(1)} N/cm) is only ${safetyFactor.toFixed(1)}× tape force (${tapeForce.toFixed(2)} N/cm). Handle carefully.`;
+		message = `Moderate risk for ${surface}. Surface strength (${surfaceStrength.toFixed(1)} N/cm) is only ${safetyFactor.toFixed(1)}× tape force (${tapeForce.toFixed(2)} N/cm). Handle carefully.`;
 	} else if (safetyFactor > 1) {
 		damageRisk = 'high';
-		message = `High risk of damage! Surface strength (${surfaceStrength.toFixed(1)} N/cm) barely exceeds tape force (${tapeForce.toFixed(2)} N/cm). May tear on removal.`;
+		message = `High risk of ${surface} damage! Surface strength (${surfaceStrength.toFixed(1)} N/cm) barely exceeds tape force (${tapeForce.toFixed(2)} N/cm). May tear on removal.`;
 	} else {
 		damageRisk = 'critical';
-		message = `CRITICAL: Tape force (${tapeForce.toFixed(2)} N/cm) exceeds surface strength (${surfaceStrength.toFixed(1)} N/cm)! Surface will likely tear.`;
+		message = `CRITICAL: Tape force (${tapeForce.toFixed(2)} N/cm) exceeds ${surface} strength (${surfaceStrength.toFixed(1)} N/cm)! Surface will likely tear.`;
 	}
 	
 	return {
